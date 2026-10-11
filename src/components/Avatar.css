@@ -1,0 +1,9 @@
+.avatar{position:relative;width:100%;aspect-ratio:25/27;isolation:isolate;pointer-events:none}
+.avatar::before{content:"";position:absolute;inset:21% 8% 7%;z-index:-1;border-radius:50%;background:radial-gradient(ellipse,#754e9120,transparent 68%);filter:blur(28px)}
+.avatar-poster,.avatar-webgl{position:absolute;inset:0;width:100%;height:100%;transition:opacity .35s ease}
+.hero-portrait .avatar-poster{object-fit:contain;transform:none;filter:drop-shadow(0 25px 35px #0008)}
+.avatar-webgl{opacity:0;filter:drop-shadow(0 25px 35px #0008)}
+.avatar-webgl canvas{display:block;width:100%;height:100%}
+.avatar[data-avatar-state=ready] .avatar-poster{opacity:0}
+.avatar[data-avatar-state=ready] .avatar-webgl{opacity:1}
+@media(prefers-reduced-motion:reduce){.avatar-poster,.avatar-webgl{transition:none}}

@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://tommy-ren.github.io/sitemap.xml

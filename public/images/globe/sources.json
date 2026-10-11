@@ -1,0 +1,77 @@
+{
+  "retrieved_on": "2026-10-10",
+  "assets": [
+    {
+      "file": "earth-blue-marble.jpg",
+      "source": "https://raw.githubusercontent.com/vasturiano/three-globe/master/example/img/earth-blue-marble.jpg",
+      "bytes": 1461877,
+      "width": 4096,
+      "height": 2048,
+      "mode": "RGB",
+      "alpha_min": 255,
+      "alpha_max": 255,
+      "sha256": "228deba2e4b600146bdcb6cfa359b8ead6aacc2b1c13550a29cd82824cfa1c01"
+    },
+    {
+      "file": "earth-topology.png",
+      "source": "https://raw.githubusercontent.com/vasturiano/three-globe/master/example/img/earth-topology.png",
+      "bytes": 378243,
+      "width": 2048,
+      "height": 1024,
+      "mode": "L",
+      "alpha_min": 255,
+      "alpha_max": 255,
+      "sha256": "839b12da2e4dd346b256cebae72e10c479a102c8980a22084c41275e4b9a0e12"
+    },
+    {
+      "file": "clouds.png",
+      "source": "https://raw.githubusercontent.com/vasturiano/react-globe.gl/master/example/clouds/clouds.png",
+      "bytes": 5033486,
+      "width": 4096,
+      "height": 2048,
+      "mode": "P",
+      "alpha_min": 0,
+      "alpha_max": 255,
+      "sha256": "35c46d8b29651a99e482401f33ed752bf4625837435fb3a89bb0032f72b88a3a"
+    }
+  ],
+  "example_source": "https://raw.githubusercontent.com/vasturiano/react-globe.gl/master/example/clouds/index.html",
+  "cloud_original": "https://raw.githubusercontent.com/turban/webgl-earth/master/images/fair_clouds_4k.png",
+  "cloud_original_byte_identical": true,
+  "optimized_assets": [
+    {
+      "file": "earth-blue-marble.webp",
+      "derived_from": "earth-blue-marble.jpg",
+      "encoder": "bundled sharp",
+      "options": {
+        "quality": 85
+      },
+      "bytes": 810376,
+      "width": 4096,
+      "height": 2048,
+      "mode": "RGB",
+      "alpha_min": 255,
+      "alpha_max": 255,
+      "sha256": "bb04d2bb675e5b2994e16f4bcd5a6b904513c98a6e7813338abd5b3e9ac72c4b"
+    },
+    {
+      "file": "clouds.webp",
+      "derived_from": "clouds.png",
+      "encoder": "bundled sharp",
+      "options": {
+        "width": 2048,
+        "height": 1024,
+        "quality": 90,
+        "alphaQuality": 100
+      },
+      "bytes": 1158706,
+      "width": 2048,
+      "height": 1024,
+      "mode": "RGBA",
+      "alpha_min": 0,
+      "alpha_max": 255,
+      "sha256": "0ee014702d0458588cd7228075553f7cb6f454a1edc49ec0f4f6b20efad50c23"
+    }
+  ],
+  "runtime_total_bytes": 2347325
+}

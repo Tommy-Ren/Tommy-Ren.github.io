@@ -1,0 +1,120 @@
+.boot-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  padding: clamp(9px, 1.1vw, 20px);
+  background: #e7e6d9;
+  color: #181c19;
+  font-family: 'Courier New', monospace;
+  font-size: clamp(10px, .85vw, 14px);
+  font-weight: 400;
+  line-height: 1.4;
+  overflow: hidden;
+  overscroll-behavior: none;
+  transform-origin: center;
+}
+
+.boot-monitor {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  padding: clamp(6px, .65vw, 12px);
+  border: 3px solid #46594b;
+  border-radius: clamp(25px, 2.6vw, 48px);
+  background: #101c16;
+  box-shadow: 0 0 0 2px #0d1711, 0 2px 5px #0c180877, inset 0 0 0 2px #020905;
+}
+
+.boot-screen {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  padding: clamp(20px, 2vw, 36px);
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: clamp(17px, 1.8vw, 34px);
+  background: radial-gradient(ellipse at 50% 45%, #d7d9d3 0%, #ced1ca 58%, #b7bcb5 100%);
+  box-shadow: inset 0 0 17px 5px #08170ac0, inset 0 0 90px #13251855;
+}
+
+/* Static scan lines and edge shading give the CRT texture without flashing. */
+.boot-screen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  border-radius: inherit;
+  background: repeating-linear-gradient(0deg, #17261c16 0, #17261c16 1px, #ffffff10 1px, #ffffff10 3px);
+  box-shadow: inset 0 0 75px #09160e60;
+}
+
+.boot-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px dashed #23322660;
+  letter-spacing: .06em;
+}
+
+.boot-os { font-weight: 700; letter-spacing: .16em; }
+.boot-node { margin-left: auto; opacity: .62; font-size: .85em; }
+.boot-status { display: flex; align-items: center; gap: 7px; font-size: .8em; min-width: 106px; justify-content: end; }
+.boot-status > span { width: 5px; height: 5px; border-radius: 50%; background: #3a6541; }
+.boot-greeting { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 30px 0; }
+.boot-handwriting { width: min(74vw, 1120px); max-width: 100%; max-height: 58vh; overflow: visible; }
+.boot-handwriting path { fill: none; stroke: #181b18; stroke-width: 28; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 1; animation: boot-write var(--intro-writing-duration) linear .08s forwards; }
+.boot-welcome { margin-top: 26px; font-size: 9px; letter-spacing: .26em; opacity: 0; animation: boot-caption .6s ease 2.4s forwards; }
+.boot-footer { display: grid; grid-template-columns: 1fr auto; align-items: end; column-gap: 24px; row-gap: 18px; }
+.boot-console { line-height: 1.65; font-size: .95em; }
+.boot-line { opacity: 0; transition: opacity .2s; }
+.boot-line.is-visible { opacity: 1; }
+.boot-ok { display: inline-block; background: #1b221c; color: #d4d8d0; line-height: 1.25; padding: 0 8px; margin-right: 4px; }
+.boot-cursor { margin-left: 3px; }
+.boot-skip { position: relative; z-index: 4; min-height: 44px; padding: 10px 0 10px 16px; border: 0; background: transparent; color: inherit; cursor: pointer; font: inherit; font-size: 10px; letter-spacing: .07em; white-space: nowrap; }
+.boot-skip span { font-size: 19px; vertical-align: -1px; margin-left: 7px; }
+.boot-skip:hover { text-decoration: underline; text-underline-offset: 4px; }
+.boot-skip:focus-visible { outline: 2px solid #243c2b; outline-offset: 4px; border-radius: 2px; }
+.boot-progress { display: flex; align-items: center; gap: 14px; grid-column: 1 / -1; border-top: 1px dashed #23322660; padding-top: 14px; }
+.boot-progress-track { flex: 1; height: clamp(10px, 1vw, 18px); background: #17241c16; overflow: hidden; }
+.boot-progress-fill { height: 100%; width: 100%; background: #181c19; transform-origin: left; }
+.boot-progress > span { min-width: 4ch; text-align: right; font-variant-numeric: tabular-nums; }
+
+@keyframes boot-write { to { stroke-dashoffset: 0; } }
+@keyframes boot-caption { to { opacity: .56; } }
+
+@media (max-width: 767px) {
+  .boot-intro { padding: 10px; font-size: 10px; }
+  .boot-screen { padding: 22px 16px; }
+  .boot-header { align-items: start; row-gap: 7px; padding-bottom: 13px; }
+  .boot-node { order: 3; width: 100%; margin: 0; font-size: 8px; }
+  .boot-status { min-width: auto; font-size: 8px; }
+  .boot-os { font-size: 10px; letter-spacing: .08em; }
+  .boot-handwriting { width: 100%; }
+  .boot-welcome { font-size: 7px; letter-spacing: .14em; margin-top: 23px; }
+  .boot-footer { column-gap: 0; row-gap: 10px; }
+  .boot-console { grid-column: 1 / -1; font-size: 8px; }
+  .boot-skip { grid-column: 2; font-size: 9px; padding-bottom: 4px; }
+  .boot-progress { padding-top: 10px; gap: 9px; }
+}
+
+@media (max-height: 480px) and (min-width: 768px) {
+  .boot-screen { padding: 14px 24px; }
+  .boot-greeting { padding: 6px 0; }
+  .boot-handwriting { max-height: 48vh; }
+  .boot-welcome { display: none; }
+  .boot-console { font-size: 9px; }
+  .boot-footer { row-gap: 8px; }
+  .boot-progress { padding-top: 8px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .boot-handwriting path { stroke-dashoffset: 0; animation: none; }
+  .boot-welcome { opacity: .56; animation: none; }
+}
