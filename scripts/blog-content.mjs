@@ -7,7 +7,7 @@ export { escapeHtml, renderMarkdown } from '../src/blog/markdown.mjs';
 
 export const SITE_URL = 'https://tommy-ren.github.io';
 export const BLOG_TITLE = "Tommy's Blog";
-export const BLOG_DESCRIPTION = '关于代码、好奇心与生活的记录。Tommy Ren 的个人博客。';
+export const BLOG_DESCRIPTION = 'Notes on code, curiosity, and everyday discoveries. A personal blog by Tommy Ren.';
 const projectRoot = fileURLToPath(new URL('../', import.meta.url));
 const defaultContentDir = path.join(projectRoot, 'content', 'blog');
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -119,14 +119,14 @@ export function createPageData(route, content) {
 }
 
 export function blogPageMetadata(route, content) {
-  const labels = { home: '首页', articles: '文章', photos: '相册', collections: '收藏', about: '关于', admin: '管理后台', 'not-found': '页面未找到' };
+  const labels = { home: 'Home', articles: 'Articles', photos: 'Photos', collections: 'Bookmarks', about: 'About', admin: 'Admin', 'not-found': 'Page not found' };
   const post = route.page === 'post' ? content.posts.find(item => item.slug === route.slug) : null;
   const relativeUrl = post ? `/blog/articles/${post.slug}/` : route.page === 'post' && route.slug
     ? `/blog/articles/?post=${encodeURIComponent(route.slug)}` : `/blog/${route.page === 'not-found' ? '404' : route.page}/`;
   const socialImage = post?.cover && /\.(?:png|jpe?g|webp)$/i.test(post.cover)
     ? post.cover : '/images/social-preview.png';
   return {
-    title: post ? `${post.title} · ${BLOG_TITLE}` : `${labels[route.page] ?? '首页'} · ${BLOG_TITLE}`,
+    title: post ? `${post.title} · ${BLOG_TITLE}` : `${labels[route.page] ?? 'Home'} · ${BLOG_TITLE}`,
     description: post?.summary ?? BLOG_DESCRIPTION,
     canonical: `${SITE_URL}${relativeUrl}`,
     image: `${SITE_URL}${socialImage}`,

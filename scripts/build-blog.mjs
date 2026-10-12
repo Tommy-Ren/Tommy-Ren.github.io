@@ -22,7 +22,7 @@ export function renderDocument(template, data, markup, feedUrl = '/blog/feed.xml
     `<meta property="og:url" content="${escapeHtml(meta.canonical)}" />`,
     `<meta property="og:type" content="${meta.type}" />`,
     `<meta property="og:image" content="${escapeHtml(meta.image)}" />`,
-    '<meta property="og:locale" content="zh_CN" />',
+    '<meta property="og:locale" content="en_CA" />',
     '<meta name="twitter:card" content="summary_large_image" />',
     ...(meta.date ? [`<meta property="article:published_time" content="${meta.date}T00:00:00Z" />`] : []),
     ...(['not-found', 'admin'].includes(data.route.page) ? ['<meta name="robots" content="noindex" />'] : []),
@@ -72,7 +72,7 @@ export async function buildBlog({ outputDir = path.join(root, 'dist'), contentDi
     await writeFile(path.join(destination, 'index.html'), document, 'utf8');
     if (route.page === 'not-found') await writeFile(path.join(outputDir, '404.html'), document, 'utf8');
   }
-  await writeFile(path.join(outputDir, 'blog', 'index.html'), `<!doctype html>\n<html lang="zh-CN"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>${escapeHtml(BLOG_TITLE)}</title><link rel="canonical" href="${SITE_URL}/blog/home/" /><meta http-equiv="refresh" content="0;url=/blog/home/" /></head><body><p>正在前往 <a href="/blog/home/">博客首页</a>。</p></body></html>\n`, 'utf8');
+  await writeFile(path.join(outputDir, 'blog', 'index.html'), `<!doctype html>\n<html lang="en"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>${escapeHtml(BLOG_TITLE)}</title><link rel="canonical" href="${SITE_URL}/blog/home/" /><meta http-equiv="refresh" content="0;url=/blog/home/" /></head><body><p>Continue to <a href="/blog/home/">the blog</a>.</p></body></html>\n`, 'utf8');
   await writeFile(path.join(outputDir, 'blog', 'feed.xml'), buildRss(cloud ? { posts: [] } : content), 'utf8');
   await writeFile(path.join(outputDir, 'sitemap.xml'), buildSitemap(cloud ? { posts: [] } : content), 'utf8');
   await writeFile(path.join(outputDir, 'robots.txt'), `User-agent: *\nAllow: /\nSitemap: ${SITE_URL}/sitemap.xml\n`, 'utf8');

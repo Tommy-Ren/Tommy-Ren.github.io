@@ -1,3 +1,4 @@
+import { useLocale } from '../i18n/Locale';
 import { Component, Suspense, lazy, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { ArrowDown, ArrowUpRight, Globe2, MapPin } from 'lucide-react';
 import { useMotionValueEvent, useScroll } from 'framer-motion';
@@ -15,8 +16,10 @@ class GlobeBoundary extends Component<{ children: ReactNode; onUnavailable: () =
 }
 
 export default function MyPath() {
+  const { t, locale } = useLocale();
   const section = useRef<HTMLElement>(null);
   const [stage, setStage] = useState(0);
+  const stageRef = useRef(0);
   const [selectedPlace, setSelectedPlace] = useState<TravelPlace | null>(null);
   const [loadGlobe, setLoadGlobe] = useState(false);
   const [inView, setInView] = useState(false);
@@ -25,9 +28,15 @@ export default function MyPath() {
   const [unavailable, setUnavailable] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const { scrollYProgress } = useScroll({ target: section, offset: ['start start', 'end end'] });
+  const selectChapter = useCallback((chapter: number) => {
+    if (stageRef.current === chapter) return;
+    stageRef.current = chapter;
+    setSelectedPlace(null);
+    setStage(chapter);
+  }, []);
   useMotionValueEvent(scrollYProgress, 'change', value => {
     const chapter = Math.min(pathSteps.length - 1, Math.max(0, Math.floor(value * pathSteps.length)));
-    setStage(previous => previous === chapter ? previous : chapter);
+    selectChapter(chapter);
   });
 
   useEffect(() => {
@@ -50,14 +59,16 @@ export default function MyPath() {
     };
   }, []);
 
-  useEffect(() => { setSelectedPlace(null); }, [stage]);
   const onGlobeReady = useCallback(() => setGlobeReady(true), []);
   const onUnavailable = useCallback(() => { setUnavailable(true); setGlobeReady(false); }, []);
   const navigateChapter = (index: number) => {
     if (!section.current) return;
     const top = section.current.getBoundingClientRect().top + window.scrollY;
     const distance = section.current.offsetHeight - window.innerHeight;
-    window.scrollTo({ top: top + distance * ((index + 0.15) / pathSteps.length), behavior: reducedMotion ? 'instant' : 'smooth' });
+    // The sticky scene stays in place. Only the camera animates: scrolling through
+    // intermediate chapters would keep restarting the flight to the clicked one.
+    selectChapter(index);
+    window.scrollTo({ top: top + distance * ((index + 0.15) / pathSteps.length), behavior: 'instant' });
   };
   const current = pathSteps[stage];
   const location = selectedPlace ?? current;
@@ -67,40 +78,40 @@ export default function MyPath() {
     <div className="path-sticky">
       <div className="path-layout">
         <div className="path-copy">
-          <header className="path-heading"><span className="eyebrow">02 / Places that shaped me</span><h2 id="path-title">My Path<span>.</span></h2><p>A story told in places.</p></header>
-          <ol className="path-timeline" aria-label="My path chapters">
+          <header className="path-heading"><span className="eyebrow">{t("02 / Places that shaped me")}</span><h2 id="path-title">{t("My Path")}<span>.</span></h2><p>{t("A story told in places.")}</p></header>
+          <ol className="path-timeline" aria-label={t("My path chapters")}>
             {pathSteps.map((chapter, index) => <li key={chapter.id} className={index === stage ? 'is-active' : index < stage ? 'is-past' : ''}>
               <button type="button" onClick={() => navigateChapter(index)} aria-current={index === stage ? 'step' : undefined} aria-controls="path-current">
                 <span className="path-node" aria-hidden="true"><span /></span>
-                <span className="path-chapter-name"><span className="path-period">{chapter.period}</span><strong>{chapterNames[index]}</strong></span>
+                <span className="path-chapter-name"><span className="path-period">{t(chapter.period)}</span><strong>{t(chapterNames[index])}</strong></span>
                 <ArrowUpRight size={16} className="path-chapter-arrow" aria-hidden="true" />
               </button>
             </li>)}
           </ol>
           <div id="path-current" className="path-current" aria-live="polite" aria-atomic="true">
-            <span className="path-current-label">{current.eyebrow}</span><h3>{current.title}</h3><p>{current.description}</p>
+            <span className="path-current-label">{t(current.eyebrow)}</span><h3>{t(current.title)}</h3><p>{t(current.description)}</p>
           </div>
-          {stage === 3 && <div className="path-travel-list" aria-label="Places I have visited">
+          {stage === 3 && <div className="path-travel-list" aria-label={t("Places I have visited")}>
             {travelPlaces.map(place => <button key={place.id} type="button" onClick={() => setSelectedPlace({ ...place })} aria-pressed={selectedPlace?.id === place.id} title={`${place.localName} · ${place.region}`}>
-              {place.name}<span aria-hidden="true">↗</span>
+              {locale === 'zh' ? place.localName : place.name}<span aria-hidden="true">↗</span>
             </button>)}
           </div>}
         </div>
-        <figure className="path-earth" aria-label="A realistic globe locating my education and travels">
+        <figure className="path-earth" aria-label={t("A realistic globe locating my education and travels")}>
           <div className="path-globe-frame">
-            <div className={`path-globe-placeholder${globeReady ? ' is-hidden' : ''}`} aria-hidden="true"><div className="path-static-earth" /><span>{unavailable ? 'A world of places to remember.' : 'Finding my place in the world…'}</span></div>
+            <div className={`path-globe-placeholder${globeReady ? ' is-hidden' : ''}`} aria-hidden="true"><div className="path-static-earth" /><span>{t(unavailable ? 'A world of places to remember.' : 'Finding my place in the world…')}</span></div>
             {loadGlobe && !unavailable && <GlobeBoundary onUnavailable={onUnavailable}><Suspense fallback={null}>
               <PathGlobe step={current} stage={stage} selectedPlace={selectedPlace} running={inView && tabVisible} reducedMotion={reducedMotion} onReady={onGlobeReady} onUnavailable={onUnavailable} />
             </Suspense></GlobeBoundary>}
           </div>
           <figcaption className="path-location">
-            <div><MapPin size={14} aria-hidden="true" /><span>{selectedPlace ? `${selectedPlace.name} · ${selectedPlace.region}` : current.place}</span></div>
-            <span className="path-coordinates">{stage === 3 && !selectedPlace ? `${travelPlaces.length} visited places · drag to rotate` : coordinate}</span>
-            {stage === 3 && selectedPlace && <button type="button" className="path-reset" onClick={() => setSelectedPlace(null)}><Globe2 size={13} aria-hidden="true" /> World view</button>}
+            <div><MapPin size={14} aria-hidden="true" /><span>{selectedPlace ? `${locale === 'zh' ? selectedPlace.localName : selectedPlace.name} · ${t(selectedPlace.region)}` : t(current.place)}</span></div>
+            <span className="path-coordinates">{stage === 3 && !selectedPlace ? `${travelPlaces.length} ${t('visited places · drag to rotate')}` : coordinate}</span>
+            {stage === 3 && selectedPlace && <button type="button" className="path-reset" onClick={() => setSelectedPlace(null)}><Globe2 size={13} aria-hidden="true" /> {t("World view")}</button>}
           </figcaption>
         </figure>
       </div>
-      <div className="path-bottom"><span><ArrowDown size={13} aria-hidden="true" /> Scroll to follow the journey</span><div className="path-chapter-progress" aria-hidden="true">{pathSteps.map((_, index) => <span key={index} className={index <= stage ? 'is-filled' : ''} />)}</div><span className="path-counter">CHAPTER {String(stage + 1).padStart(2, '0')} / 04</span></div>
+      <div className="path-bottom"><span><ArrowDown size={13} aria-hidden="true" /> {t("Scroll to follow the journey")}</span><div className="path-chapter-progress" aria-hidden="true">{pathSteps.map((_, index) => <span key={index} className={index <= stage ? 'is-filled' : ''} />)}</div><span className="path-counter">{t("CHAPTER ")}{String(stage + 1).padStart(2, '0')} / 04</span></div>
     </div>
   </section>;
 }

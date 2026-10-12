@@ -1,0 +1,21 @@
+Just Relax — Purrple Cat
+Original music: https://purrplecat.itch.io/just-relax
+Artist: https://purrplecat.com/
+License: Creative Commons Attribution-ShareAlike 4.0 International
+https://creativecommons.org/licenses/by-sa/4.0/
+Downloaded from the artist's own itch.io release on 2026-10-12.
+These ten MP3 files are distributed unmodified under the same license.
+
+01. Beach Resort
+02. Just Relax
+03. Road Trip
+04. Disassociate
+05. Foggy Window
+06. Quiet Night
+07. Getting a Haircut
+08. The Golden Ratio
+09. Riding My Bike to the End of the World
+10. Look On The Bright Side
+
+The photographic player thumbnails are separate existing Unsplash assets;
+see /blog/assets/sources.json. They are not the album artwork.

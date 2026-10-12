@@ -1,0 +1,9 @@
+.language-switch { display:inline-flex; align-items:center; gap:5px; color:inherit; border:1px solid currentColor; border-color:color-mix(in srgb, currentColor 18%, transparent); border-radius:8px; padding:7px 8px; flex-shrink:0; }
+.language-switch select { appearance:auto; background:transparent; color:inherit; border:0; font:inherit; font-size:12px; cursor:pointer; max-width:65px; outline-offset:4px; }
+.language-switch option { color:#15161d; background:#fff; }
+.portfolio-language { position:fixed; z-index:210; top:17px; right:24px; color:#e7e7ed; background:rgba(15,16,22,.78); backdrop-filter:blur(16px); }
+html[lang="zh-CN"] .hero-heading, html[lang="zh-CN"] .section-heading { letter-spacing:-.04em; }
+html[lang="zh-CN"] .hero-title { font-size:clamp(3.1rem,10.5vw,11rem); }
+html[lang="zh-CN"] .about-copy { line-height:1.8; }
+html[lang="zh-CN"] .about-copy .reveal-word { display:inline; white-space:normal; }
+@media(max-width:600px) { .portfolio-language { right:12px; top:12px; } }

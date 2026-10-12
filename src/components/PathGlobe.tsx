@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Globe, { type GlobeMethods } from 'react-globe.gl';
+import { gsap } from 'gsap';
 import { Mesh, MeshPhongMaterial, SphereGeometry, SRGBColorSpace, TextureLoader, TOUCH, type Texture } from 'three';
 import { pathSteps, travelPlaces, type PathStep, type TravelPlace } from '../data/path';
 
@@ -63,23 +64,44 @@ export default function PathGlobe({ step, stage, selectedPlace, running, reduced
     controls.enableRotate = interactive;
     controls.enableZoom = false;
     controls.enablePan = false;
-    controls.enableDamping = !reducedMotion;
+    // OrbitControls and a guided flight must never move the camera together.
+    controls.enableDamping = false;
     controls.touches.ONE = TOUCH.ROTATE;
     controls.touches.TWO = TOUCH.DOLLY_ROTATE;
     controls.cursorStyle = interactive ? 'grab' : 'auto';
-    controls.autoRotate = interactive && !selectedPlace && !reducedMotion;
+    controls.autoRotate = false;
     controls.autoRotateSpeed = 0.24;
+    controls.update();
+    let flight: gsap.core.Tween | undefined;
+    const setCameraState = (state: string) => { if (container.current) container.current.dataset.cameraState = state; };
     const startDragging = () => {
+      flight?.kill();
       controls.autoRotate = false;
-      // Cancel a location tween at the current view so it cannot fight a drag.
-      instance.pointOfView(instance.pointOfView(), 0);
+      controls.enableDamping = !reducedMotion;
+      setCameraState('manual');
     };
     if (interactive) controls.addEventListener('start', startDragging);
     const destination = selectedPlace
       ? { lat: selectedPlace.lat, lng: selectedPlace.lng, altitude: 1.6 }
       : { lat: step.lat, lng: step.lng, altitude: step.altitude };
-    instance.pointOfView(destination, reducedMotion ? 0 : 1150);
-    return () => controls.removeEventListener('start', startDragging);
+    const view = { ...instance.pointOfView() };
+    // Keep one cancellable tween, starting at the currently visible view. The
+    // library's internal tween uses .end() on interruption, which can snap ahead.
+    destination.lng = view.lng + ((destination.lng - view.lng + 540) % 360 + 360) % 360 - 180;
+    const finish = () => {
+      controls.enableDamping = !reducedMotion;
+      controls.autoRotate = interactive && !selectedPlace && !reducedMotion;
+      setCameraState('idle');
+    };
+    if (reducedMotion) { instance.pointOfView(destination, 0); finish(); }
+    else {
+      setCameraState('flying');
+      flight = gsap.to(view, {
+        ...destination, duration: 1.15, ease: 'power2.inOut',
+        onUpdate: () => instance.pointOfView(view, 0), onComplete: finish,
+      });
+    }
+    return () => { flight?.kill(); controls.autoRotate = false; controls.removeEventListener('start', startDragging); };
   }, [ready, step, stage, selectedPlace, reducedMotion]);
 
   useEffect(() => {

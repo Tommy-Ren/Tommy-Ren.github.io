@@ -126,5 +126,95 @@
     "width": 1000,
     "height": 1251,
     "bytes": 153690
+  },
+  {
+    "file": "../audio/beach-resort.mp3",
+    "title": "Beach Resort",
+    "source": "Purrple Cat",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "upstream": "https://purrplecat.itch.io/just-relax",
+    "attribution": "Music by Purrple Cat. Unmodified original recording from Just Relax."
+  },
+  {
+    "file": "../audio/just-relax.mp3",
+    "title": "Just Relax",
+    "source": "Purrple Cat",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "upstream": "https://purrplecat.itch.io/just-relax",
+    "attribution": "Music by Purrple Cat. Unmodified original recording from Just Relax."
+  },
+  {
+    "file": "../audio/road-trip.mp3",
+    "title": "Road Trip",
+    "source": "Purrple Cat",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "upstream": "https://purrplecat.itch.io/just-relax",
+    "attribution": "Music by Purrple Cat. Unmodified original recording from Just Relax."
+  },
+  {
+    "file": "../audio/disassociate.mp3",
+    "title": "Disassociate",
+    "source": "Purrple Cat",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "upstream": "https://purrplecat.itch.io/just-relax",
+    "attribution": "Music by Purrple Cat. Unmodified original recording from Just Relax."
+  },
+  {
+    "file": "../audio/foggy-window.mp3",
+    "title": "Foggy Window",
+    "source": "Purrple Cat",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "upstream": "https://purrplecat.itch.io/just-relax",
+    "attribution": "Music by Purrple Cat. Unmodified original recording from Just Relax."
+  },
+  {
+    "file": "../audio/quiet-night.mp3",
+    "title": "Quiet Night",
+    "source": "Purrple Cat",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "upstream": "https://purrplecat.itch.io/just-relax",
+    "attribution": "Music by Purrple Cat. Unmodified original recording from Just Relax."
+  },
+  {
+    "file": "../audio/getting-a-haircut.mp3",
+    "title": "Getting a Haircut",
+    "source": "Purrple Cat",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "upstream": "https://purrplecat.itch.io/just-relax",
+    "attribution": "Music by Purrple Cat. Unmodified original recording from Just Relax."
+  },
+  {
+    "file": "../audio/the-golden-ratio.mp3",
+    "title": "The Golden Ratio",
+    "source": "Purrple Cat",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "upstream": "https://purrplecat.itch.io/just-relax",
+    "attribution": "Music by Purrple Cat. Unmodified original recording from Just Relax."
+  },
+  {
+    "file": "../audio/riding-my-bike-to-the-end-of-the-world.mp3",
+    "title": "Riding My Bike to the End of the World",
+    "source": "Purrple Cat",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "upstream": "https://purrplecat.itch.io/just-relax",
+    "attribution": "Music by Purrple Cat. Unmodified original recording from Just Relax."
+  },
+  {
+    "file": "../audio/look-on-the-bright-side.mp3",
+    "title": "Look On The Bright Side",
+    "source": "Purrple Cat",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "upstream": "https://purrplecat.itch.io/just-relax",
+    "attribution": "Music by Purrple Cat. Unmodified original recording from Just Relax."
   }
 ]

@@ -33,6 +33,7 @@ body { margin: 0; }
 .blog-root h1, .blog-root h2, .blog-root h3, .blog-root p, .blog-root figure { margin: 0; }
 .blog-root img { display: block; max-width: 100%; }
 .blog-root svg { flex-shrink: 0; }
+.blog-root select { color:inherit; font-family:inherit; }
 .blog-shell { width: min(100%, 1500px); padding: 0 30px; margin: auto; }
 .blog-header { min-height: 86px; display: flex; justify-content: space-between; align-items: center; gap: 26px; }
 .blog-brand { display: flex; align-items: baseline; gap: 0; font-family: 'Space Grotesk', 'Segoe UI', sans-serif; font-size: 43px; letter-spacing: -2.5px; font-weight: 600; line-height: 1; }
