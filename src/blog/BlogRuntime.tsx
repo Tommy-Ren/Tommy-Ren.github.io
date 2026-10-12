@@ -65,7 +65,7 @@ export default function BlogRuntime({ initialData }: { initialData: BlogPageData
       setData({ route, content: empty, live: { status: 'error', message: problem } });
       return;
     }
-    loadPublishedContent(requestedArticleSlug(pathname, search))
+    loadPublishedContent(requestedArticleSlug(pathname, search), locale)
       .then(content => {
         if (!active) return;
         const page = resolveBlogPage(pathname, content, search);
@@ -78,6 +78,6 @@ export default function BlogRuntime({ initialData }: { initialData: BlogPageData
         if (active) setData({ route, content: empty, live: { status: 'error', message: '博客内容暂时没有加载成功，请稍后再试。' } });
       });
     return () => { active = false; };
-  }, [initialData, attempt, address]);
+  }, [initialData, attempt, address, locale]);
   return <BlogApp data={data} onRetry={retry} />;
 }

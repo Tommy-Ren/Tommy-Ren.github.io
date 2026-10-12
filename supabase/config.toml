@@ -4,3 +4,8 @@ project_id = "tommy-ren-blog"
 # 其他未来新增函数继续保持默认 JWT 验证。
 [functions.blog-feed]
 verify_jwt = false
+
+# In addition to the gateway JWT check, the handler verifies the user with Auth
+# and checks is_blog_admin before any database or paid translation work.
+[functions.blog-translate]
+verify_jwt = true

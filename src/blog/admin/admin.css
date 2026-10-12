@@ -164,3 +164,12 @@
 .admin-starter-note { font-size: 11px; color: var(--blog-muted); line-height: 1.9; }
 .admin-starter > .admin-notice { margin-top: 20px; }
 @media (max-width: 760px) { .admin-starter-photos { grid-template-columns: repeat(2, minmax(0, 1fr)); } .admin-sidebar nav > button { min-width: 0; } .admin-sidebar nav strong { font-size: 10px; } }
+
+.admin-translations { margin: 26px 0 20px; padding: 22px; border: 1px solid var(--blog-line); border-radius: 12px; background: var(--blog-soft); }
+.admin-translations h3 { display: flex; align-items: center; gap: 8px; font-size: 15px; }
+.admin-translations details { margin-top: 20px; }
+.admin-translations summary { cursor: pointer; color: var(--blog-accent-text); font-size: 12px; }
+.admin-translations h4 { margin: 20px 0 8px; font-size: 19px; }
+.admin-translations details > p { font-size: 13px; line-height: 1.8; }
+.admin-translation-auto { display: flex; align-items: center; gap: 9px; font-size: 12px; }
+.admin-translation-auto input { width: 16px; height: 16px; accent-color: var(--blog-accent-text); }

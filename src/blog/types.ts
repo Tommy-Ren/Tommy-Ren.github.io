@@ -9,6 +9,9 @@ export interface BlogPost {
   readingMinutes: number;
   html: string;
   toc: { id: string; title: string; level: number }[];
+  sourceLanguage?: 'en' | 'zh';
+  language?: 'en' | 'zh';
+  translationProvider?: 'manual' | 'deepl';
 }
 
 export interface BlogContent {

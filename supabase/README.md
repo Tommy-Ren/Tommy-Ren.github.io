@@ -125,3 +125,25 @@ node --test supabase/tests/blog-feed.test.mjs supabase/tests/blog-seed.test.mjs
 [blog_rls.sql](tests/blog_rls.sql) 在事务内创建测试账号／数据，验证匿名、普通用户、管理员的读取／增删改、禁止自行升权和媒体目录权限，最后 `ROLLBACK`。请在已应用 migration 的本地／测试 Supabase 数据库中整段运行，不逐条执行。Storage 夹具只含元数据，不代表实际上传文件。
 
 开发期间，该 migration、seed 与 RLS SQL 已在 PGlite 的 PostgreSQL 18.3 中执行通过；`auth` / `storage` 的表和辅助函数使用测试夹具，PostgreSQL 的角色、权限、约束与 RLS 为真实执行。**云端 Auth 登录、Storage API 的格式／大小限制和 Edge Function 部署，需要项目接入后继续验收。**
+
+## 8. DeepL 文章自动翻译
+
+依次执行基础数据库迁移和 `migrations/20261012020000_blog_translations.sql`。后者为文章增加原文语言与内容版本，并建立独立译文表；不会改写原文。
+
+在项目的 **Edge Functions → Secrets** 添加 `DEEPL_API_KEY`。这是服务端密钥，不能加 `VITE_` 前缀、放入 GitHub Pages 构建变量或提交到仓库。Free API key 的 `:fx` 后缀用于选择 `api-free.deepl.com`；其他 key 使用 `api.deepl.com`。
+
+```powershell
+npx supabase functions deploy blog-translate --project-ref gkkofvtqudyvwxtqmnbq
+```
+
+函数开启网关 JWT 验证，并通过 `auth.getUser()` 和 `is_blog_admin()` 再次检查用户。仅现有博客管理员可以调用 DeepL，普通读者只读取缓存，不会触发翻译费用。函数使用调用者身份和数据库 RLS，不使用 service-role key。
+
+后台文章编辑器选择原文语言（中文 / English）；默认勾选「发布 / 保存已发布文章时自动翻译」。发布后会生成标题、摘要、分类、标签和 Markdown 正文的另一语言版本。已有文章可点击「生成 / 更新译文」，并展开预览。生成草稿译文会把草稿文字发给 DeepL，应仅用于你准备交给该服务的内容。取消勾选可只保存原文。
+
+读者切换 EN / 中文时，列表、文章、目录和页面标题一同切换。代码块、行内代码、链接目标与图片地址保持原样。译文沿用原文 URL。原文内容改变时版本自动更新；过时译文不再显示。封面或发布日期调整不会使译文失效。缺少译文或 API 异常时保留原文，正文顶部说明当前语言；后台显示可重试错误。
+
+直接在 SQL / Table Editor 改文章不会自动调用 DeepL，需要在博客后台点击更新译文。后台保存期间请等待翻译完成；关闭页面导致中断时可重新点击生成，成功缓存会复用。
+
+验证：`npm run test:backend` 覆盖翻译方向、Markdown 保护、请求分批、额度错误与缓存版本。`tests/translations.sql` 在事务中验证公开/草稿权限及过期写入，最后回滚所有测试数据。
+
+实现依据：[DeepL text translation](https://developers.deepl.com/api-reference/translate/request-translation)、[Supabase function secrets](https://supabase.com/docs/guides/functions/secrets)。

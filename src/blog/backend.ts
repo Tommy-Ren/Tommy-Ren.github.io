@@ -2,11 +2,29 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { renderMarkdown } from './markdown.mjs';
 import { backendConfigProblem } from './config.mjs';
 import type { BlogContent, BlogLink, BlogPhoto, BlogPost, BlogSettings } from './types';
+import { selectTranslation } from './translations.mjs';
 
 export interface BlogPostRecord {
   id: string; slug: string; title: string; summary: string; markdown: string;
   category: string; tags: string[]; cover: string; published: boolean;
   published_on: string; reading_minutes: number; created_at: string; updated_at: string;
+  source_language: 'en' | 'zh'; content_version: string;
+}
+export interface BlogTranslationRecord {
+  post_id: string; locale: 'en' | 'zh'; source_version: string;
+  title: string; summary: string; category: string; tags: string[]; markdown?: string;
+  provider: 'manual' | 'deepl'; updated_at: string;
+}
+
+export async function translateArticle(database: SupabaseClient, postId: string, regenerate = false) {
+  const { data, error } = await database.functions.invoke('blog-translate', { body: { postId, regenerate } });
+  if (error) {
+    let message = '翻译服务暂不可用，请检查 blog-translate 是否已部署，再重试。原文已保存。';
+    try { const body = await error.context?.json(); if (body?.error) message = body.error; } catch { /* Safe fallback. */ }
+    throw new Error(message);
+  }
+  if (data?.error) throw new Error(data.error);
+  return data as { status: 'cached' | 'translated'; locale: 'en' | 'zh' };
 }
 export interface BlogPhotoRecord extends BlogPhoto {
   published: boolean; sort_order: number; created_at: string; updated_at: string;
@@ -82,10 +100,10 @@ async function publicRows<T>(table: string, columns: string, order: string): Pro
   }
 }
 
-export async function loadPublishedContent(slug?: string): Promise<BlogContent> {
+export async function loadPublishedContent(slug?: string, locale: 'en' | 'zh' = 'en'): Promise<BlogContent> {
   const database = getBlogClient();
   if (!database) throw new Error(getBackendProblem() || '数据库没有连接。');
-  const metadataColumns = 'id,slug,title,summary,category,tags,cover,published_on,reading_minutes';
+  const metadataColumns = 'id,slug,title,summary,category,tags,cover,published_on,reading_minutes,source_language,content_version';
   const [records, photos, links, settingsResult] = await Promise.all([
     publicRows<Omit<BlogPostRecord, 'markdown'>>( 'blog_posts', metadataColumns, 'published_on'),
     publicRows<BlogPhotoRecord>('blog_photos', 'id,title,caption,image_url,source_url,credit,is_own,sort_order', 'sort_order'),
@@ -93,18 +111,33 @@ export async function loadPublishedContent(slug?: string): Promise<BlogContent> 
     database.from('blog_settings').select('*').eq('id', 'main').single(),
   ]);
   if (settingsResult.error) throw settingsResult.error;
-  const posts: BlogPost[] = records.map(record => ({ slug: record.slug, title: record.title,
-    date: record.published_on, summary: record.summary, category: record.category,
-    tags: record.tags, cover: record.cover, readingMinutes: record.reading_minutes, html: '', toc: [] }));
+  const translations: BlogTranslationRecord[] = [];
+  for (let start = 0; ; start += 200) {
+    const result = await database.from('blog_post_translations')
+      .select('post_id,locale,source_version,title,summary,category,tags,provider,updated_at')
+      .eq('locale', locale).order('post_id').range(start, start + 199);
+    if (result.error) break; // A temporary translation failure must not hide originals.
+    translations.push(...result.data as BlogTranslationRecord[]);
+    if (result.data.length < 200) break;
+  }
+  const toPost = (record: Omit<BlogPostRecord, 'markdown'>, translation: BlogTranslationRecord | null): BlogPost => ({
+    slug: record.slug, title: translation?.title ?? record.title, date: record.published_on,
+    summary: translation?.summary ?? record.summary, category: translation?.category ?? record.category,
+    tags: translation?.tags ?? record.tags, cover: record.cover, readingMinutes: record.reading_minutes,
+    sourceLanguage: record.source_language, language: translation ? locale : record.source_language,
+    translationProvider: translation?.provider, html: '', toc: [],
+  });
+  const posts = records.map(record => toPost(record, selectTranslation(record, translations, locale)));
   if (slug) {
     const result = await database.from('blog_posts').select('*').eq('slug', slug).eq('published', true).maybeSingle();
     if (result.error) throw result.error;
     if (result.data) {
       const record = result.data as BlogPostRecord;
-      const rendered = renderMarkdown(record.markdown);
-      const current: BlogPost = { slug: record.slug, title: record.title, date: record.published_on,
-        summary: record.summary, category: record.category, tags: record.tags, cover: record.cover,
-        readingMinutes: record.reading_minutes, html: rendered.html, toc: rendered.toc };
+      const translated = await database.from('blog_post_translations').select('*').eq('post_id', record.id).eq('locale', locale).maybeSingle();
+      const translation = selectTranslation(record, translated.data ? [translated.data] : [], locale);
+      const markdown = translation?.markdown ?? record.markdown;
+      const rendered = renderMarkdown(markdown);
+      const current: BlogPost = { ...toPost(record, translation), readingMinutes: getReadingMinutes(markdown), html: rendered.html, toc: rendered.toc };
       const index = posts.findIndex(item => item.slug === slug);
       if (index >= 0) posts[index] = current;
       else posts.push(current);

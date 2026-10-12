@@ -122,6 +122,7 @@ function Articles({ posts }: { posts: BlogPost[] }) {
   const terms = query.toLocaleLowerCase().trim().split(/\s+/).filter(Boolean);
   const filtered = posts.filter((post) => (category === '全部' || post.category === category) && (tag === '全部' || post.tags.includes(tag)) && terms.every((term) => `${post.title} ${post.summary} ${post.category} ${post.tags.join(' ')}`.toLocaleLowerCase().includes(term)));
   const clear = () => { setQuery(''); setCategory('全部'); setTag('全部'); };
+  useEffect(() => { setCategory('全部'); setTag('全部'); }, [locale]);
   return <>
     <PageHeading eyebrow={t("WORDS / NOTES / LITTLE DISCOVERIES")} title={t("最近写下的")} description={t("留下那些还在生长的想法。关于代码，也关于生活。")}><span className="blog-page-count"><strong>{posts.length.toString().padStart(2, '0')}</strong>{t("篇文字")}</span></PageHeading>
     <section className="blog-card blog-filters" aria-label={t("文章筛选")}><div className="blog-search"><Search size={18} aria-hidden="true" /><label className="blog-visually-hidden" htmlFor="blog-search">{t("搜索文章标题、摘要和标签")}</label><input id="blog-search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t("搜索文章、想法或关键词…")} type="search" />{query && <button onClick={() => setQuery('')} aria-label={t("清除搜索")}><X size={17} /></button>}</div><div className="blog-filter-row"><span>{t("分类")}</span><div>{categories.map((item) => <button key={item} onClick={() => setCategory(item)} aria-pressed={category === item}>{t(item)}</button>)}</div></div>{tags.length > 1 && <div className="blog-filter-row blog-tag-row"><span>{t("标签")}</span><div>{tags.map((item) => <button key={item} onClick={() => setTag(item)} aria-pressed={tag === item}>{item === '全部' ? t('全部') : `# ${item}`}</button>)}</div></div>}</section>
@@ -152,13 +153,15 @@ function Post({ post, posts, settings }: { post: BlogPost; posts: BlogPost[]; se
     window.addEventListener('scroll', queue, { passive: true });
     window.addEventListener('resize', queue);
     return () => { window.removeEventListener('scroll', queue); window.removeEventListener('resize', queue); window.cancelAnimationFrame(frame); };
-  }, [post.slug]);
+  }, [post.slug, post.html]);
   return <>
     <div className="blog-reading-progress" style={{ width: `${progress}%` }} aria-hidden="true" />
     <a className="blog-back-link" href="/blog/articles/"><ArrowLeft size={16} />{t("全部文章")}</a>
     <div className="blog-reading-layout">
-      <article className="blog-card blog-post">
+      <article className="blog-card blog-post" lang={post.language === 'zh' ? 'zh-CN' : post.language}>
         <header className="blog-post-header"><span className="blog-eyebrow">{post.category} / {dateLabel(post.date)}</span><h1>{post.title}</h1><p className="blog-post-summary">{post.summary}</p><div className="blog-author"><img src="/images/tommy-avatar.webp" alt="" width="44" height="44" /><span><strong>{settings.display_name}</strong><span>{t("阅读约 ")}{post.readingMinutes} {t("分钟")}</span></span><div className="blog-post-tags">{post.tags.map((tag) => <span key={tag}># {tag}</span>)}</div></div></header>
+        {post.translationProvider && <p className="blog-translation-note" lang={locale}>{locale === 'en' ? (post.translationProvider === 'deepl' ? 'Translated from Chinese with DeepL.' : 'English translation · Original in Chinese.') : (post.translationProvider === 'deepl' ? '由 DeepL 从英文翻译。' : '中文译文 · 原文为英文')}{' '}{locale === 'en' ? 'Switch to 中文 to read the original.' : '切换 EN 可阅读原文。'}</p>}
+        {post.language && post.language !== locale && <p className="blog-translation-note" lang={locale}>{locale === 'en' ? 'An English translation is not available yet. Showing the Chinese original.' : '中文译文尚未就绪，当前显示英文原文。'}</p>}
         {post.cover && <img className="blog-post-cover" src={post.cover} alt={t("文章封面")} width="1000" height="550" />}
         <div ref={article} className="blog-prose" dangerouslySetInnerHTML={{ __html: post.html }} />
         <div className="blog-post-end"><Sparkles size={18} /><p>{t("感谢读到这里。下一个想法，再见。")}</p>{settings.contact_email && <a href={`mailto:${settings.contact_email}?subject=${encodeURIComponent(`关于文章：${post.title}`)}`}>{t("与我聊聊")}<ArrowUpRight size={15} /></a>}</div>
