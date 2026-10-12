@@ -33,11 +33,13 @@ This repository is named `Tommy-Ren.github.io`, so Vite uses `/` as its base pat
 
 ## Edit content
 
-The hero renders the user-provided `tommy-avatar.glb` using Three.js. The original is preserved; the site downloads `public/models/tommy-avatar-web.glb`, optimized from 64.1 MB to 3.8 MB. The head gently follows a desktop pointer and floats at a maximum of 30 frames per second. Rendering pauses offscreen and in hidden tabs; reduced-motion preferences show a still 3D pose. The matching transparent poster `public/images/tommy-avatar.webp` appears while loading and remains available if WebGL or model loading fails.
+The hero renders the user-provided `tommy-avatar.glb` using Three.js. The original is preserved; the site downloads `public/models/tommy-avatar-eyes-web.glb` (3.83 MB), with independent eyes derived from the optimized avatar. Both eyes look toward the same pointer target before the head gently follows, with rotation limits and a smooth return to neutral after two seconds of inactivity or when the pointer leaves. The avatar floats at a maximum of 30 frames per second. Rendering pauses offscreen and in hidden tabs; reduced-motion preferences show a still 3D pose. The matching transparent poster `public/images/tommy-avatar.webp` appears while loading and remains available if WebGL or model loading fails.
 
 - Avatar view, camera framing, lights, and movement: `src/components/AvatarScene.tsx`.
 - Loading, visibility, and fallback: `src/components/Avatar.tsx`, `src/components/avatarAsset.ts`.
 - Model optimization and rebuild instructions: `scripts/prepare-avatar.mjs`, `public/models/README.md`.
+- Editable eyes and gaze target: `artwork/avatar/tommy-avatar-eye-rig.blend`. In Blender, move `Gaze_Target` along X or Z to preview eye movement. The eye constraints limit yaw to 12 degrees and pitch to 6 degrees. The source includes a hidden reference head; only the new head and eyes are exported for the website.
+- Eye construction and compression: `scripts/build-avatar-eyes.py`, `scripts/prepare-avatar-eyes.mjs`. Eyelids remain fixed; blinking requires additional eyelid shapes.
 
 `My Path` follows About Me: four scroll-driven chapters move the realistic globe from Wuhan Foreign Language School to BCIT, then SFU, and finally 18 visited places. Chapter buttons navigate the same scroll sequence; travel buttons focus the globe on each destination. Education routes connect the supplied study locations. Travel dates and flight routes are not assumed.
 

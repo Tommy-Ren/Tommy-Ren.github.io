@@ -45,3 +45,21 @@ No Draco or KTX/Basis decoder is needed.
 The Khronos glTF validator reported zero errors. It reports one tangent-space portability warning because the original model has no authored tangent attribute, and one informational message because this validator does not inspect Meshopt internals. Independent NodeIO Meshopt decoding and Three.js GLTFLoader loading in headless Edge both succeeded. The browser rendered exactly 1,931,091 and 289,656 triangles, with one draw call per version and no page errors. A side-by-side render at the intended presentation scale retained the face, glasses, hair silhouette and material appearance.
 
 Local QA evidence is preserved in `.preview/model-tools/optimization-report.json`, `browser-validation.json`, and `avatar-comparison.png`. The original inspection/optimization scripts also remain there as historical evidence.
+
+## Independent eye version
+
+The website now loads `tommy-avatar-eyes-web.glb` (3,827,368 bytes, 307,653 triangles). `tommy-avatar-web.glb` remains the unrigged optimized source. The eye version has a `Head` parent, fixed `Head_Surface`, and independent `Eye_L` / `Eye_R` pivots, whose local +Z is forward. Quantized geometry lives under each eye's child surface so compression cannot shift the authored rotation center.
+
+The authored brown iris, pupils, visible eye geometry, UVs and normals are retained. The spherical eye surface is segmented from the head; a closed shell extends the hidden eye surface and stays behind the iris using raycast depth. Fixed eyelids, glasses and eye corners remain with the head. Eyes are limited to 12 degrees yaw and 6 degrees pitch in the runtime. This is an object rig; there are no skin weights or blink morph targets.
+
+The editable Blender 5.1 source is `artwork/avatar/tommy-avatar-eye-rig.blend`. Select `Gaze_Target` and move it in X (horizontal) or Z (vertical) to inspect the eye constraints. Its neutral position is `(0, -4, 0.406)` in Blender coordinates. The hidden `Reference_Original_Web_Head` collection provides the unmodified web head for comparison. The original full-detail GLB is also preserved unchanged.
+
+To rebuild, install the same separate optimization tooling documented above, then run from the repository root (adjust the Blender executable path for your installation):
+
+```powershell
+node scripts/prepare-avatar-eyes.mjs --prepare-input
+& 'D:/Software/Blender 5.1/blender.exe' --background --python scripts/build-avatar-eyes.py
+node scripts/prepare-avatar-eyes.mjs
+```
+
+The construction script regenerates the editable source from the unrigged web asset. It exports the eyes in their neutral pose before enabling the Blender gaze constraints. Compression preserves the eye hierarchy without a second mesh simplification, validates the GLB and independently decodes it. Generated intermediates and reports remain in the ignored `.preview/model-tools` directory.

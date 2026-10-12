@@ -1,4 +1,4 @@
-export const AVATAR_MODEL_URL = '/models/tommy-avatar-web.glb';
+export const AVATAR_MODEL_URL = '/models/tommy-avatar-eyes-web.glb';
 export const AVATAR_POSTER_URL = '/images/tommy-avatar.webp';
 
 let modelBuffer: Promise<ArrayBuffer> | undefined;

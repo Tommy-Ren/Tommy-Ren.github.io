@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { ACESFilmicToneMapping, Box3, DirectionalLight, Group, HemisphereLight, MathUtils, Mesh, PerspectiveCamera, PMREMGenerator, Scene, SRGBColorSpace, Texture, Vector3, WebGLRenderer, type Material, type WebGLRenderTarget } from 'three';
+import { ACESFilmicToneMapping, Box3, DirectionalLight, Euler, Group, HemisphereLight, MathUtils, Mesh, PerspectiveCamera, PMREMGenerator, Quaternion, Scene, SRGBColorSpace, Texture, Vector3, WebGLRenderer, type Material, type WebGLRenderTarget } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
@@ -109,28 +109,89 @@ export default function AvatarScene({ running, reducedMotion, onReady, onUnavail
       pivot.name = 'tommy-avatar-pivot';
       pivot.add(normalized);
       scene.add(pivot);
-      const target = { x: 0, y: 0 };
+      // Eye objects use a centered origin and local +Z forward. Keep the authored
+      // quaternion so a glTF exporter can introduce a parent or axis correction.
+      const eyeObjects = [model.getObjectByName('Eye_L'), model.getObjectByName('Eye_R')];
+      const eyes = eyeObjects.every(object => object?.parent)
+        ? eyeObjects.map(object => ({
+          object: object!,
+          rest: object!.quaternion.clone(),
+          restInverse: object!.quaternion.clone().invert(),
+          destination: new Quaternion(),
+        }))
+        : [];
+      const target = { x: 0, y: 0, active: false, lastMove: 0 };
+      const gazeDistance = 4;
+      const gazeNeutral = new Vector3();
+      const gazePoint = new Vector3();
+      const eyeDirection = new Vector3();
+      const eyeRotation = new Euler(0, 0, 0, 'YXZ');
+      const eyeYawLimit = MathUtils.degToRad(12);
+      const eyePitchLimit = MathUtils.degToRad(6);
       const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
       const pointer = (event: PointerEvent) => {
         if (!preferences.current.running || preferences.current.reducedMotion || !finePointer.matches) return;
+        if (event.pointerType !== 'mouse' && event.pointerType !== 'pen') return;
+        // A hovering pen can glance around without competing with touch scrolling.
+        if (event.pointerType === 'pen' && (event.buttons !== 0 || event.pressure > 0)) return;
         const rect = container.getBoundingClientRect();
         target.x = MathUtils.clamp((event.clientX - rect.left - rect.width / 2) / (window.innerWidth / 2), -1, 1);
         target.y = MathUtils.clamp((event.clientY - rect.top - rect.height / 2) / (window.innerHeight / 2), -1, 1);
+        target.active = true;
+        target.lastMove = performance.now();
       };
-      const resetPointer = () => { target.x = 0; target.y = 0; };
+      const resetPointer = () => { target.x = 0; target.y = 0; target.active = false; };
       window.addEventListener('pointermove', pointer, { passive: true });
+      window.addEventListener('blur', resetPointer);
       document.addEventListener('pointerleave', resetPointer);
+      finePointer.addEventListener('change', resetPointer);
       removePointerListeners = () => {
         window.removeEventListener('pointermove', pointer);
+        window.removeEventListener('blur', resetPointer);
         document.removeEventListener('pointerleave', resetPointer);
+        finePointer.removeEventListener('change', resetPointer);
       };
 
       const neutral = () => {
         pivot.rotation.set(0, -0.1, -0.025);
         pivot.position.y = 0;
+        eyes.forEach(eye => eye.object.quaternion.copy(eye.rest));
         resetPointer();
       };
       neutral();
+      if (eyes.length) {
+        pivot.updateWorldMatrix(true, true);
+        eyes[0].object.getWorldPosition(gazeNeutral);
+        eyes[1].object.getWorldPosition(eyeDirection);
+        gazeNeutral.add(eyeDirection).multiplyScalar(0.5);
+        eyes[0].object.getWorldDirection(eyeDirection);
+        gazeNeutral.addScaledVector(eyeDirection, gazeDistance);
+      }
+      const updateEyes = (delta: number) => {
+        if (!eyes.length) return;
+        const smoothing = 1 - Math.exp(-20 * delta);
+        if (target.active) {
+          // One distant point gives both eyes the same subject without excessive
+          // convergence. Its screen-space offset remains independent of the head.
+          gazePoint.copy(gazeNeutral);
+          gazePoint.x += target.x * gazeDistance * Math.tan(MathUtils.degToRad(20));
+          gazePoint.y -= target.y * gazeDistance * Math.tan(MathUtils.degToRad(12));
+          pivot.updateWorldMatrix(true, true);
+        }
+        for (const eye of eyes) {
+          if (target.active && eye.object.parent) {
+            eye.object.parent.worldToLocal(eyeDirection.copy(gazePoint));
+            eyeDirection.sub(eye.object.position).applyQuaternion(eye.restInverse);
+            const yaw = MathUtils.clamp(Math.atan2(eyeDirection.x, eyeDirection.z), -eyeYawLimit, eyeYawLimit);
+            const pitch = MathUtils.clamp(Math.atan2(eyeDirection.y, Math.hypot(eyeDirection.x, eyeDirection.z)), -eyePitchLimit, eyePitchLimit);
+            eyeRotation.set(-pitch, yaw, 0, 'YXZ');
+            eye.destination.setFromEuler(eyeRotation).premultiply(eye.rest);
+          } else {
+            eye.destination.copy(eye.rest);
+          }
+          eye.object.quaternion.slerp(eye.destination, smoothing);
+        }
+      };
       const draw = () => { if (!cancelled && !failed) renderer?.render(scene, camera); };
       const animate = (time: number) => {
         frame = 0;
@@ -140,11 +201,13 @@ export default function AvatarScene({ running, reducedMotion, onReady, onUnavail
           const delta = Math.min((time - previous) / 1000, 0.1);
           previous = time;
           elapsed += delta;
-          const smoothing = 1 - Math.exp(-7 * delta);
-          pivot.rotation.y = MathUtils.lerp(pivot.rotation.y, -0.1 + target.x * 0.2, smoothing);
-          pivot.rotation.x = MathUtils.lerp(pivot.rotation.x, target.y * 0.09, smoothing);
+          if (target.active && time - target.lastMove > 2000) resetPointer();
+          const smoothing = 1 - Math.exp(-(eyes.length ? 6 : 7) * delta);
+          pivot.rotation.y = MathUtils.lerp(pivot.rotation.y, -0.1 + target.x * (eyes.length ? MathUtils.degToRad(8) : 0.2), smoothing);
+          pivot.rotation.x = MathUtils.lerp(pivot.rotation.x, target.y * (eyes.length ? MathUtils.degToRad(4) : 0.09), smoothing);
           pivot.rotation.z = -0.025 + Math.sin(elapsed * 0.65) * 0.012;
           pivot.position.y = Math.sin(elapsed * 1.1) * 0.035;
+          updateEyes(delta);
           draw();
         }
         frame = requestAnimationFrame(animate);
@@ -165,7 +228,8 @@ export default function AvatarScene({ running, reducedMotion, onReady, onUnavail
       sync.current = () => {
         cancelAnimationFrame(frame);
         frame = 0;
-        if (cancelled || failed || !preferences.current.running) return;
+        if (cancelled || failed) return;
+        if (!preferences.current.running) { neutral(); return; }
         if (preferences.current.reducedMotion) { neutral(); draw(); }
         else { previous = performance.now(); frame = requestAnimationFrame(animate); }
       };
