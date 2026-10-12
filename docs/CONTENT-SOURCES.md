@@ -6,7 +6,7 @@ This site presents Tommy Ren's own profile and projects. The original design pro
 
 Education, work history, and public contact details come from the user-provided resume and the existing [GitHub profile README](https://github.com/Tommy-Ren/Tommy-Ren). Descriptions are concise paraphrases; no performance statistics or employment claims have been invented.
 
-The public page uses the email and LinkedIn address already included in the profile README. It does not include the resume's phone number, the cover letter, or raw application documents. The work periods and education statuses reflect the supplied resume and should be updated when they change.
+The public contact email is rent823242@gmail.com, supplied directly by Tommy on October 12, 2026 to replace the school email across the portfolio and blog. The LinkedIn address follows the profile README. The site does not include the resume's phone number, the cover letter, or raw application documents. The work periods and education statuses reflect the supplied resume and should be updated when they change.
 
 ## My Path
 

@@ -1,0 +1,189 @@
+{
+  "version": 1,
+  "posts": [
+    {
+      "slug": "static-blog-routes",
+      "title": "一个链接，为什么也需要自己的 HTML？",
+      "summary": "建站笔记的初始示例：理解静态博客如何处理文章链接、刷新页面和 GitHub Pages 部署。",
+      "markdown": "在浏览器里点开一篇文章很容易。更容易被忽略的问题是：把它的地址发给朋友，对方直接打开，能否看到同一篇文章？\n\n下面先记录仓库 Markdown 模式的做法。这个博客也支持数据库模式：页面仍由 GitHub Pages 托管，文章内容从 Supabase 读取。\n\n## 浏览器地址与文件之间的关系\n\nGitHub Pages 发布的是静态文件。访问 `/blog/articles/my-post/` 时，需要有对应的页面文件可以返回。\n\n构建结果可以采用这样的目录：\n\n```text\ndist/\n├── index.html\n└── blog/\n    ├── home/index.html\n    └── articles/\n        └── my-post/index.html\n```\n\n首页继续放在 `/`，博客首页放在 `/blog/home/`，文章有自己的目录。这些地址也就有了实际可以读取的 HTML。\n\n## 为什么只切换 React 组件还不够\n\n客户端路由可以在页面已经加载后切换组件。但是直接打开某个深层地址时，浏览器首先请求服务器上的文件；JavaScript 还没有机会运行。\n\n如果托管环境没有配置所有路径回退到同一个入口，地址可能返回 404。因此，静态博客在构建阶段生成每篇文章的页面，会更符合 GitHub Pages 的工作方式。\n\n## 先生成内容，再加入交互\n\n每篇文章的标题、正文和链接都写进 HTML。页面加载后，React 再接管搜索、主题切换等交互。\n\n这样既能直接访问文章，也能在关闭 JavaScript 时读到正文。文章还可以拥有独立的标题、摘要、分享信息和规范链接。\n\n## 发布流程\n\n1. 在仓库中添加或修改 Markdown 文章。\n2. 构建时读取元数据，生成目录与文章页面。\n3. 将构建产物交给 GitHub Pages。\n4. 检查一篇文章的直接访问与刷新，而不只检查首页跳转。\n\n文中的 `my-post` 是目录结构示例。这个博客的真实文章路径会根据每篇 Markdown 的 `slug` 生成。\n\n## 文章来自数据库时\n\n如果希望在后台写作后直接发布，可以把内容交给 Supabase。新文章使用 `/blog/articles/?post=my-post`：浏览器先取得已有的文章入口 HTML，再根据查询参数读取已发布的文章。这样直接访问和刷新都能取得实际存在的页面，新文章也不需要重新构建整个网站。\n\n这种模式需要 JavaScript 和数据库连接。文章标题与正文在浏览器中加载，分享平台未必会执行这些脚本，因此不能把它当作每篇文章都已经生成完整 HTML 的方案。草稿是否能读取，则由数据库权限决定。",
+      "category": "工程笔记",
+      "tags": [
+        "Web",
+        "GitHub Pages",
+        "静态网站"
+      ],
+      "cover": "/blog/assets/city.webp",
+      "published": true,
+      "published_on": "2026-10-11",
+      "reading_minutes": 3
+    },
+    {
+      "slug": "welcome-to-my-blog",
+      "title": "你好，这里是 Tommy 的写作空间",
+      "summary": "一篇可以随时改写的开篇：给代码、想法和生活里的小发现留一个位置。",
+      "markdown": "这里是我的个人博客。主页介绍我在做什么，博客则用来慢慢记录：一个问题怎样被解决，一段代码为什么这样写，还有那些值得留下的小发现。\n\n## 为什么想开始写\n\n写下来，会迫使一个模糊的想法变得具体。把「我好像懂了」变成别人也能看懂的解释，也是检验理解的一种方式。\n\n不必等到做出一个很大的项目才开始。一个清楚的例子、一次有用的排查、一条还没想明白的问题，都可以是一篇文章的起点。\n\n## 这里会记录什么\n\n- **代码与工程**：实现思路、工具使用，以及解决问题的过程。\n- **学习与探索**：计算机科学、AI 和我感兴趣的话题。\n- **生活里的观察**：旅行、照片和日常中值得记住的片段。\n\n文章会尽量说明背景、选择和结果。遇到尚未验证的想法，也会清楚标注。\n\n## 从一篇小文章开始\n\n这个博客的第一版，先给写作留出一个安静的空间。内容可以慢慢增加，表达也可以不断修改。\n\n> 把好奇心写下来，让下一次探索有迹可循。\n\n这篇开篇是站点初始化示例。接入数据库后，可以在管理后台把它换成自己的故事；本地 Markdown 文件也可以留作写作和导入材料。",
+      "category": "随笔",
+      "tags": [
+        "博客",
+        "生活",
+        "开始"
+      ],
+      "cover": "/blog/assets/mountain.webp",
+      "published": true,
+      "published_on": "2026-10-11",
+      "reading_minutes": 2
+    },
+    {
+      "slug": "writing-with-markdown",
+      "title": "用 Markdown 写下第一篇文章",
+      "summary": "一份可编辑的写作示例：从文章信息到标题、图片和代码块，了解这个博客的内容格式。",
+      "markdown": "接入 Supabase 后，可以在 `/blog/admin/` 的创作工作台写文章：填写标题、文章地址、摘要、分类和标签，用 Markdown 编辑正文，再切换到预览检查排版。保存草稿时内容只对管理员可见，点击发布后才会出现在博客中。\n\n新文章地址为 `/blog/articles/?post=my-first-post`。文章地址使用英文小写、数字和短横线，发布后尽量保持不变。后台还能上传图片并复制公开图片地址；图片上传后就能被访问，草稿权限不会隐藏图片。\n\n如果使用仓库 Markdown 模式，文章则存放在 `content/blog/` 中。每篇都是一个 `.md` 文件，可以用文本编辑器或 GitHub 网页编辑；下面的文件格式也可用作首次导入数据库的材料。\n\n## 先填写文章信息\n\n文件最上面的两行 `---` 之间是 YAML 元数据：\n\n```yaml\n---\ntitle: \"我的第一篇文章\"\nslug: my-first-post\ndate: \"2026-10-11\"\nsummary: \"用一句话说明这篇文章讲什么。\"\ncategory: 随笔\ntags: [学习, 生活]\ncover: /images/project-planets.svg\ndraft: true\n---\n```\n\n`slug` 决定文章地址，例如 `/blog/articles/my-first-post/`。使用英文小写、数字和短横线；发布后尽量保持不变，避免旧链接失效。\n\n`draft: true` 的文章不会出现在网站中。写好后改成 `false`，提交并构建，文章就会加入列表。\n\n## 用标题组织思路\n\n正文中使用 `##` 标记二级标题，使用 `###` 标记更小的章节。文章标题已经由页面显示，不需要在正文里再写一次一级标题。\n\n二级到四级标题会自动加入右侧目录。相同的标题会得到不同的锚点，点击目录能够定位到对应章节。\n\n### 图片与链接\n\n把自己的图片放到 `public/blog/assets/`，再用根路径引用：\n\n```markdown\n![图片说明](/blog/assets/my-photo.webp)\n\n[返回个人主页](/)\n```\n\n描述图片内容的替代文字，有助于阅读辅助工具和图片加载失败时的理解。封面路径也应指向仓库中真实存在的公开图片。\n\n### 代码与引用\n\n三个反引号可以包围代码，后面写上语言名称：\n\n```typescript\nconst idea = 'Keep writing';\nconsole.log(idea);\n```\n\n引用文字以 `>` 开头：\n\n> 先写一个清楚的段落，再把它扩展成一篇完整的文章。\n\n## 发布前，读一遍\n\n检查标题和摘要是否准确，图片是否可以访问，以及示例代码是否说明了上下文。数据库模式在后台预览后直接发布；仓库模式则提交 Markdown 并重新构建。\n\n这篇文章可以保留作格式参考，也可以改写成你自己的 Markdown 使用笔记。",
+      "category": "写作手记",
+      "tags": [
+        "Markdown",
+        "写作",
+        "博客"
+      ],
+      "cover": "/blog/assets/coffee.webp",
+      "published": true,
+      "published_on": "2026-10-11",
+      "reading_minutes": 3
+    }
+  ],
+  "photos": [
+    {
+      "id": "6e7d2011-1010-4000-8000-000000000001",
+      "title": "走进绿色里",
+      "caption": "留一段树影，给忙碌的日常。",
+      "image_url": "/blog/assets/forest.webp",
+      "source_url": "https://images.unsplash.com/photo-1441974231531-c6227db76b6e",
+      "credit": "Unsplash · 示例素材",
+      "is_own": false,
+      "published": true,
+      "sort_order": 0
+    },
+    {
+      "id": "6e7d2011-1010-4000-8000-000000000002",
+      "title": "海风来信",
+      "caption": "在海与天之间，把视线放远一点。",
+      "image_url": "/blog/assets/coast.webp",
+      "source_url": "https://images.unsplash.com/photo-1518837695005-2083093ee35b",
+      "credit": "Unsplash · 示例素材",
+      "is_own": false,
+      "published": true,
+      "sort_order": 1
+    },
+    {
+      "id": "6e7d2011-1010-4000-8000-000000000003",
+      "title": "下一站，远方",
+      "caption": "山的轮廓，总会让人想继续出发。",
+      "image_url": "/blog/assets/road.webp",
+      "source_url": "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b",
+      "credit": "Unsplash · 示例素材",
+      "is_own": false,
+      "published": true,
+      "sort_order": 2
+    },
+    {
+      "id": "6e7d2011-1010-4000-8000-000000000004",
+      "title": "山间的风",
+      "caption": "山与湖，把这一刻留在相框里。",
+      "image_url": "/blog/assets/mountain.webp",
+      "source_url": "https://images.unsplash.com/photo-1470770841072-f978cf4d019e",
+      "credit": "Unsplash · 示例素材",
+      "is_own": false,
+      "published": true,
+      "sort_order": 3
+    },
+    {
+      "id": "6e7d2011-1010-4000-8000-000000000005",
+      "title": "日光漫游",
+      "caption": "在路上，慢一点也很好。",
+      "image_url": "/blog/assets/sunlight.webp",
+      "source_url": "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee",
+      "credit": "Unsplash · 示例素材",
+      "is_own": false,
+      "published": true,
+      "sort_order": 4
+    },
+    {
+      "id": "6e7d2011-1010-4000-8000-000000000006",
+      "title": "花开的季节",
+      "caption": "一小束颜色，一整天的好心情。",
+      "image_url": "/blog/assets/flowers.webp",
+      "source_url": "https://images.unsplash.com/photo-1490750967868-88aa4486c946",
+      "credit": "Unsplash · 示例素材",
+      "is_own": false,
+      "published": true,
+      "sort_order": 5
+    },
+    {
+      "id": "6e7d2011-1010-4000-8000-000000000007",
+      "title": "午后一杯",
+      "caption": "为今天按一下暂停，给思绪留一点空间。",
+      "image_url": "/blog/assets/coffee.webp",
+      "source_url": "https://images.unsplash.com/photo-1442512595331-e89e73853f31",
+      "credit": "Unsplash · 示例素材",
+      "is_own": false,
+      "published": true,
+      "sort_order": 6
+    },
+    {
+      "id": "6e7d2011-1010-4000-8000-000000000008",
+      "title": "城市的夜晚",
+      "caption": "路灯亮起，故事还在继续。",
+      "image_url": "/blog/assets/city.webp",
+      "source_url": "https://images.unsplash.com/photo-1519501025264-65ba15a82390",
+      "credit": "Unsplash · 示例素材",
+      "is_own": false,
+      "published": true,
+      "sort_order": 7
+    }
+  ],
+  "links": [
+    {
+      "id": "6e7d2011-1010-4000-8000-000000000101",
+      "title": "MDN Web Docs",
+      "kind": "WEB / DOCUMENTATION",
+      "description": "从一个 API 的细节开始，理解 Web 是如何工作的。",
+      "href": "https://developer.mozilla.org/zh-CN/",
+      "symbol": "M",
+      "color": "lime",
+      "published": true,
+      "sort_order": 0
+    },
+    {
+      "id": "6e7d2011-1010-4000-8000-000000000102",
+      "title": "Three.js",
+      "kind": "CREATIVE / GRAPHICS",
+      "description": "把想象放进浏览器：光、材质、空间与交互。",
+      "href": "https://threejs.org/",
+      "symbol": "3",
+      "color": "lavender",
+      "published": true,
+      "sort_order": 1
+    },
+    {
+      "id": "6e7d2011-1010-4000-8000-000000000103",
+      "title": "React",
+      "kind": "UI / DEVELOPMENT",
+      "description": "构建交互界面，也练习把复杂问题拆成小部分。",
+      "href": "https://react.dev/",
+      "symbol": "R",
+      "color": "blue",
+      "published": true,
+      "sort_order": 2
+    },
+    {
+      "id": "6e7d2011-1010-4000-8000-000000000104",
+      "title": "The Missing Semester",
+      "kind": "TOOLS / LEARNING",
+      "description": "补上开发工具这一课，让日常工作更顺手。",
+      "href": "https://missing.csail.mit.edu/",
+      "symbol": ">_",
+      "color": "peach",
+      "published": true,
+      "sort_order": 3
+    }
+  ]
+}

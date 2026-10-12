@@ -1,0 +1,6 @@
+project_id = "tommy-ren-blog"
+
+# RSS 对所有订阅读者开放；函数内部只以 anon 身份读取公开元数据。
+# 其他未来新增函数继续保持默认 JWT 验证。
+[functions.blog-feed]
+verify_jwt = false

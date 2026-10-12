@@ -1,0 +1,14 @@
+.neon-pointer { --pointer-rgb: 255, 255, 255; position: fixed; inset: 0; z-index: 10000; color: rgb(var(--pointer-rgb)); pointer-events: none; opacity: 0; }
+.blog-root[data-theme='fresh'] .neon-pointer { --pointer-rgb: 0, 0, 0; }
+.neon-pointer[data-active='true'] { opacity: 1; }
+.neon-pointer-core, .neon-pointer-ring, .neon-pointer-trail { position: absolute; left: 0; top: 0; will-change: transform; pointer-events: none; }
+.neon-pointer-core i { display: block; width: 5px; height: 5px; margin: -2.5px; border-radius: 50%; background: currentColor; box-shadow: 0 0 3px 1px rgba(var(--pointer-rgb), .7), 0 0 12px 2px rgba(var(--pointer-rgb), .23); }
+.neon-pointer-ring i { display: block; width: 26px; height: 26px; margin: -13px; border: 1px solid rgba(var(--pointer-rgb), .72); border-radius: 50%; box-shadow: 0 0 5px rgba(var(--pointer-rgb), .32), inset 0 0 4px rgba(var(--pointer-rgb), .18); transition: transform .18s ease-out, border-color .18s; }
+.neon-pointer[data-hover='true'] .neon-pointer-ring i { transform: scale(1.45); border-color: currentColor; }
+.neon-pointer[data-pressed='true'] .neon-pointer-ring i { transform: scale(.72); }
+.neon-pointer-trail { width: 5px; height: 5px; margin: -2.5px; border-radius: 50%; background: currentColor; box-shadow: 0 0 7px 2px rgba(var(--pointer-rgb), .32); filter: blur(.65px); opacity: 0; }
+.neon-pointer-trail:nth-child(n+4) { width: 3px; height: 3px; margin: -1.5px; }
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  html.has-neon-pointer, html.has-neon-pointer body, html.has-neon-pointer .blog-root, html.has-neon-pointer .blog-root :is(a, button, [role='button']) { cursor: none !important; }
+}
+@media (hover: none), (pointer: coarse), (prefers-reduced-motion: reduce), (forced-colors: active) { .neon-pointer { display: none; } }

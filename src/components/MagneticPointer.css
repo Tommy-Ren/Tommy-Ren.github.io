@@ -1,0 +1,15 @@
+.magnetic-pointer { position: fixed; inset: 0; z-index: 10000; pointer-events: none; opacity: 0; color: #a7ff83; }
+.magnetic-pointer[data-active='true'] { opacity: 1; }
+.magnetic-pointer-frame { position: absolute; left: 0; top: 0; width: 34px; height: 34px; will-change: transform, width, height; filter: drop-shadow(0 0 5px #80ff6466); }
+.magnetic-pointer-frame i { position: absolute; width: 8px; height: 8px; border: 0 solid currentColor; transition: width .15s, height .15s; }
+.magnetic-pointer-frame i:nth-child(1) { left: 0; top: 0; border-top-width: 2px; border-left-width: 2px; border-top-left-radius: 2px; }
+.magnetic-pointer-frame i:nth-child(2) { right: 0; top: 0; border-top-width: 2px; border-right-width: 2px; border-top-right-radius: 2px; }
+.magnetic-pointer-frame i:nth-child(3) { left: 0; bottom: 0; border-bottom-width: 2px; border-left-width: 2px; border-bottom-left-radius: 2px; }
+.magnetic-pointer-frame i:nth-child(4) { right: 0; bottom: 0; border-bottom-width: 2px; border-right-width: 2px; border-bottom-right-radius: 2px; }
+.magnetic-pointer[data-attached='true'] .magnetic-pointer-frame i { width: 10px; height: 10px; }
+.magnetic-pointer-dot { position: absolute; left: -2px; top: -2px; width: 4px; height: 4px; border-radius: 50%; background: currentColor; box-shadow: 0 0 7px #a7ff8380; }
+.magnetic-pointer[data-pressed='true'] .magnetic-pointer-frame { color: white; }
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  html.has-magnetic-pointer, html.has-magnetic-pointer body, html.has-magnetic-pointer .site-wrapper, html.has-magnetic-pointer :is(a, button, [role='button'], [data-magnetic]) { cursor: none !important; }
+}
+@media (hover: none), (pointer: coarse), (prefers-reduced-motion: reduce), (forced-colors: active) { .magnetic-pointer { display: none; } }

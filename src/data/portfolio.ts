@@ -87,7 +87,7 @@ export const projects: Project[] = [
 export const profile = {
   name: 'Tommy Ren',
   shortName: 'Tommy',
-  email: 'tra42@sfu.ca',
+  email: 'rent823242@gmail.com',
   linkedin: 'https://www.linkedin.com/in/tommy-ren',
   github: 'https://github.com/Tommy-Ren',
   location: 'Burnaby, BC',

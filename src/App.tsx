@@ -7,6 +7,7 @@ import { preloadAvatar } from './components/avatarAsset';
 import { BootIntro } from './components/BootIntro';
 import './components/BootIntro.css';
 import MyPath from './components/MyPath';
+import MagneticPointer from './components/MagneticPointer';
 import { experience, expertise, profile, projects, type Project } from './data/portfolio';
 
 const art = (name: string) => `/images/reference/${name}.png`;
@@ -23,7 +24,7 @@ function HeroSection() {
   return <section className="hero" aria-labelledby="hero-title">
     <FadeIn className="nav-wrap" y={-20}>
       <nav className="nav" aria-label="Main navigation">
-        {[['About', '#about'], ['Path', '#path'], ['Expertise', '#expertise'], ['Projects', '#projects'], ['Contact', '#contact']].map(([label, href]) => <a key={href} href={href}>{label}</a>)}
+        {[['About', '#about'], ['Path', '#path'], ['Expertise', '#expertise'], ['Projects', '#projects'], ['Blog', '/blog/home/'], ['Contact', '#contact']].map(([label, href]) => <a key={href} href={href}>{label}</a>)}
       </nav>
     </FadeIn>
     <FadeIn className="hero-title-wrap" delay={0.15} y={40}><h1 id="hero-title" className="hero-heading hero-title">Hi, I'm Tommy</h1></FadeIn>
@@ -147,6 +148,7 @@ export default function App() {
   }, [pageReady]);
 
   return <>
+    <MagneticPointer />
     <AnimatePresence onExitComplete={() => setPageReady(true)}>
       {introVisible && <BootIntro key="boot-intro" onComplete={completeIntro} />}
     </AnimatePresence>
