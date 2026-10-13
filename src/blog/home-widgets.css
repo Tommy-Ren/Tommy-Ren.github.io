@@ -79,15 +79,6 @@
 .blog-playlist-track strong { font-weight:500; overflow-wrap:anywhere; }
 .blog-playlist-track small { color:var(--blog-muted); font-size:9px; }
 .blog-music-empty { padding:15px 0 5px; color:var(--blog-muted); font-size:11px; }
-.blog-music-license { display:grid; gap:5px; margin-top:12px; font-size:9px; color:var(--blog-muted); }
-.blog-music-recommendations { margin-top:15px; padding-top:13px; border-top:1px solid var(--blog-line); }
-.blog-music-recommendations > span { font:8px Consolas,monospace; letter-spacing:1px; color:var(--blog-accent-text); }
-.blog-music-recommendations > p { font-size:9px; line-height:1.5; color:var(--blog-muted); margin:7px 0; }
-.blog-music-recommendations > a { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:8px 0; }
-.blog-music-recommendations a > span { display:grid; gap:3px; }
-.blog-music-recommendations a strong { font-size:11px; font-weight:500; }
-.blog-music-recommendations a small { color:var(--blog-muted); font-size:9px; }
-.blog-music-recommendations a:hover { color:var(--blog-accent-text); }
 .blog-floating-player { position:fixed; z-index:120; right:max(24px,env(safe-area-inset-right)); bottom:max(24px,env(safe-area-inset-bottom)); width:min(350px,calc(100vw - 32px)); }
 .blog-player-capsule { display:flex; align-items:center; margin-left:auto; width:270px; max-width:100%; border:1px solid var(--blog-line); border-radius:40px; padding:6px; background:color-mix(in srgb,var(--blog-card) 95%,transparent); backdrop-filter:blur(22px); box-shadow:0 8px 30px #0003,inset 0 1px 0 #ffffff0e; }
 .blog-root .blog-player-open { display:flex; align-items:center; gap:10px; flex:1; min-width:0; text-align:left; padding:0; }

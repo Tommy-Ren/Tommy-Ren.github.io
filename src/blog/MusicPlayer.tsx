@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Music2, Pause, Play, SkipBack, SkipForward, Volume2, VolumeX, ListMusic, Repeat, Repeat1, Search, Shuffle, ExternalLink } from 'lucide-react';
+import { Music2, Pause, Play, SkipBack, SkipForward, Volume2, VolumeX, ListMusic, Repeat, Repeat1, Search, Shuffle } from 'lucide-react';
 import { useLocale } from '../i18n/Locale';
 import { useMusic } from './MusicContext';
-import { officialRecommendations, tracks } from './music';
+import { tracks } from './music';
 import type { PlaybackMode } from './playback-queue.mjs';
 
 const time = (seconds: number) => `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`;
@@ -37,8 +37,6 @@ export default function MusicPlayer() {
       <label className="blog-playlist-search"><Search size={14} /><input type="search" value={query} onChange={event => setQuery(event.target.value)} placeholder={zh ? '搜索歌曲、音乐人…' : 'Find a track or artist…'} aria-label={zh ? '搜索曲库' : 'Search the music library'} /><span>{visibleTracks.length}</span></label>
       <ol>{visibleTracks.map(({ item, number }) => <li key={item.id}><button onClick={() => select(number)} aria-current={number === index ? 'true' : undefined}><span>{String(number + 1).padStart(2, '0')}</span><span className="blog-playlist-track"><strong>{item.title}</strong><small>{item.artist}</small></span>{number === index && <Music2 size={13} />}</button></li>)}</ol>
       {!visibleTracks.length && <p className="blog-music-empty" role="status">{zh ? '没有找到这首歌，试试其他关键词。' : 'No tracks found. Try another search.'}</p>}
-      <p className="blog-music-license"><a href={track.licenseUrl} target="_blank" rel="noopener noreferrer">{track.artist} · {track.license} ↗</a><a href="/blog/audio/credits.txt" target="_blank" rel="noopener noreferrer">{zh ? '全部音乐署名' : 'All music credits'} ↗</a></p>
-      <div className="blog-music-recommendations"><span>{zh ? 'SPOTIFY 精选' : 'MORE ON SPOTIFY'}</span><p>{zh ? '更多心头好 · 前往 Spotify 收听' : 'More favorites · listen on Spotify'}</p>{officialRecommendations.map(item => <a key={item.url} href={item.url} target="_blank" rel="noopener noreferrer"><span><strong>{zh && item.title === 'Artist collection' ? '音乐人主页' : item.title}</strong><small>{item.artist}</small></span><ExternalLink size={12} /></a>)}</div>
     </details>
     {error && <p className="blog-stats-note" role="status">{t('Audio unavailable. Try the next track or play again.')}</p>}
   </section>;

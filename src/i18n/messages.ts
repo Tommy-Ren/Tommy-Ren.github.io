@@ -109,7 +109,7 @@ const pairs: [string, string][] = [
   ['Simon Fraser University','西蒙菲莎大学'], ['British Columbia Institute of Technology','不列颠哥伦比亚理工学院'], ['BSc, Computing Science','计算机科学理学学士'],
   ['Diploma, Computer Systems Technology','计算机系统技术文凭'], ['Artificial Intelligence concentration · Statistics minor','人工智能方向 · 统计学辅修'], ['Predictive Analytics concentration','预测分析方向'],
   ['PEOPLE & MOMENTS','来访与时光'], ['Glad you’re here.','很高兴，你来过。'], ['Every visit is part of the story.','每一次来访，都留下了故事。'],
-  ['LIVE','实时'], ['Automatic · One visit per IP per day · Portfolio + blog','自动统计 · 每个 IP 每天一次 · 主页与博客共享'],
+  ['LIVE','实时'],
   ['STUDY RADIO','学习电台'], ['The listening room','轻听歌单'], ['Expand player','展开播放器'], ['Collapse player','收起播放器'],
 ];
 const dictionaries: Record<string, Record<string, string>> = { en: {}, zh: {} };
