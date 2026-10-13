@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type PointerEvent } from 'react';
+import { useEffect, useRef, useState, type PointerEvent, type CSSProperties } from 'react';
 import { GripVertical, Music2, Pause, Play, X } from 'lucide-react';
 import { useLocale } from '../i18n/Locale';
 import { useMusic } from './MusicContext';
@@ -21,7 +21,8 @@ export default function FloatingPlayer({ page }: { page:string }) {
   if(page==='home')return null;
   const collapse=()=>{setExpanded(false);opener.current?.focus();};
   const rect=position || (typeof window!=='undefined'?{x:window.innerWidth-264,y:window.innerHeight-76}:{x:0,y:0});
-  const panelStyle=typeof window==='undefined'?{}:{left:Math.max(8,Math.min(rect.x,window.innerWidth-328)),top:Math.max(8,Math.min(rect.y-490,window.innerHeight-510))};
+  const above=typeof window!=='undefined' && rect.y>window.innerHeight/2;
+  const panelStyle:CSSProperties & {'--panel-height'?:string}=typeof window==='undefined'?{}:{left:Math.max(8,Math.min(rect.x,window.innerWidth-328)),...(above?{bottom:window.innerHeight-rect.y+12}:{top:rect.y+62}),'--panel-height':`${Math.max(100,above?rect.y-24:window.innerHeight-rect.y-74)}px`};
   return <aside ref={root} className="blog-floating-player" style={position?{left:position.x,top:position.y,right:'auto',bottom:'auto'}:undefined} aria-label={t('Music player')} onKeyDown={e=>{if(e.key==='Escape')collapse();}}>
     {expanded&&<div id="blog-floating-panel" className="blog-floating-panel" style={panelStyle}><button ref={close} className="blog-player-close" aria-label={t('Collapse player')} onClick={collapse}><X size={17}/></button><MusicPlayer/></div>}
     <div className="blog-player-capsule" data-playing={playing}>
