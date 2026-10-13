@@ -147,3 +147,11 @@ npx supabase functions deploy blog-translate --project-ref gkkofvtqudyvwxtqmnbq
 验证：`npm run test:backend` 覆盖翻译方向、Markdown 保护、请求分批、额度错误与缓存版本。`tests/translations.sql` 在事务中验证公开/草稿权限及过期写入，最后回滚所有测试数据。
 
 实现依据：[DeepL text translation](https://developers.deepl.com/api-reference/translate/request-translation)、[Supabase function secrets](https://supabase.com/docs/guides/functions/secrets)。
+
+## 9. 照片标题与说明自动翻译
+
+运行 `migrations/20261013000000_photo_translations.sql`，并重新部署 `blog-translate`。继续使用现有 `DEEPL_API_KEY`，无需新密钥。后台相册编辑器支持选择原文语言，公开或保存已公开照片时默认自动生成另一种语言；「补全所有公开照片译文」会补齐现有照片，并复用有效缓存。
+
+只有标题和说明发送给 DeepL；图片、来源链接和摄影署名保持原样。首页精选图片和 Photos 页都读取当前语言的译文。修改标题、说明或原文语言会使旧译文失效；修改图片地址、排序和署名不会。数据库直接编辑后须从后台更新译文。
+
+照片译文采用与文章相同的管理员检查、版本锁和 RLS：读者只能读取已公开照片的最新译文，不能调用翻译或写入译文。`tests/photo-translations.sql` 整段执行后回滚夹具，检查版本、匿名和普通用户权限；`npm run test:backend` 检查双向翻译及异常响应。

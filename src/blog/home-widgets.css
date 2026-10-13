@@ -33,6 +33,8 @@
 .blog-vinyl img { width:38px; height:38px; object-fit:cover; border-radius:50%; }
 .blog-vinyl i { position:absolute; inset:calc(50% - 3px); background:#17171d; border:1px solid #dedbea; border-radius:50%; }
 .blog-music-now h2 { font-size:20px; line-height:1.3; margin-top:6px; letter-spacing:-.5px; }
+.blog-music-now > div:last-child { min-width:0; }
+.blog-music-now h2,.blog-music-now p { overflow-wrap:anywhere; }
 .blog-music-now p { color:var(--blog-muted); font-size:10px; margin-top:5px; }
 .blog-music-status { font:8px Consolas,monospace; letter-spacing:1px; color:var(--blog-accent-text); }
 .blog-music-progress { margin-top:auto; }
@@ -44,6 +46,11 @@
 .blog-music-controls .blog-music-play { border-radius:50%; background:var(--blog-accent); color:var(--blog-accent-ink); width:38px; height:38px; }
 .blog-music-volume { display:flex; align-items:center; gap:8px; color:var(--blog-muted); width:85px; }
 .blog-music-volume input { min-width:0; }
+.blog-music-modes { display:flex; gap:4px; padding:4px; margin-top:15px; background:color-mix(in srgb,var(--blog-soft) 65%,transparent); border:1px solid var(--blog-line); border-radius:9px; }
+.blog-root .blog-music-modes button { display:flex; align-items:center; justify-content:center; gap:6px; flex:1; min-width:0; padding:8px 4px; border-radius:6px; color:var(--blog-muted); font-size:10px; line-height:1.3; white-space:nowrap; }
+.blog-root .blog-music-modes button[aria-pressed='true'] { color:var(--blog-accent-text); background:var(--blog-card); box-shadow:0 1px 4px #0002,inset 0 0 0 1px var(--blog-line); }
+.blog-root .blog-music-modes button:hover { color:var(--blog-ink); }
+.blog-music button:focus-visible,.blog-music a:focus-visible,.blog-playlist summary:focus-visible { outline:2px solid var(--blog-accent-text); outline-offset:3px; }
 @keyframes blog-vinyl-spin { to { transform:rotate(360deg); } }
 @media(max-width:1250px) { .blog-header .blog-location { display:none; } .blog-hero-avatar { width:85px; height:85px; right:26px; top:60px; } .blog-hero-avatar > img { width:75px; height:80px; } .blog-hero-side-note { display:none; } .blog-statistics,.blog-music { padding:20px; } .blog-checkin-heading { flex-wrap:wrap; } .blog-music-volume { width:60px; } }
 @media(max-width:900px) { .blog-header { flex-wrap:wrap; } .blog-header nav { order:3; width:100%; justify-content:center; } .blog-header-actions { margin-left:auto; } .blog-hero p { max-width:70%; } .blog-top-row { min-height:initial; } }
@@ -62,7 +69,25 @@
 .blog-playlist li button > span { color:var(--blog-muted); font:10px Consolas,monospace; }
 .blog-playlist li button > svg { flex-shrink:0; margin-left:auto; }
 .blog-playlist li button:hover,.blog-playlist li button[aria-current] { background:var(--blog-soft); color:var(--blog-accent-text); }
-.blog-music-license { display:block; margin-top:12px; font-size:9px; color:var(--blog-muted); }
+.blog-playlist-search { display:flex; align-items:center; gap:8px; margin-top:13px; padding:8px 10px; background:var(--blog-soft); border:1px solid var(--blog-line); border-radius:7px; color:var(--blog-muted); }
+.blog-playlist-search:focus-within { outline:2px solid var(--blog-accent-text); outline-offset:2px; }
+.blog-playlist-search svg { flex-shrink:0; }
+.blog-root .blog-playlist-search input { min-width:0; width:100%; background:transparent; color:var(--blog-ink); border:0; outline:0; padding:0; font:inherit; }
+.blog-playlist-search input::placeholder { color:var(--blog-muted); }
+.blog-playlist-search > span { font:10px Consolas,monospace; }
+.blog-playlist li button > .blog-playlist-track { display:grid; min-width:0; gap:3px; font:inherit; color:inherit; }
+.blog-playlist-track strong { font-weight:500; overflow-wrap:anywhere; }
+.blog-playlist-track small { color:var(--blog-muted); font-size:9px; }
+.blog-music-empty { padding:15px 0 5px; color:var(--blog-muted); font-size:11px; }
+.blog-music-license { display:grid; gap:5px; margin-top:12px; font-size:9px; color:var(--blog-muted); }
+.blog-music-recommendations { margin-top:15px; padding-top:13px; border-top:1px solid var(--blog-line); }
+.blog-music-recommendations > span { font:8px Consolas,monospace; letter-spacing:1px; color:var(--blog-accent-text); }
+.blog-music-recommendations > p { font-size:9px; line-height:1.5; color:var(--blog-muted); margin:7px 0; }
+.blog-music-recommendations > a { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:8px 0; }
+.blog-music-recommendations a > span { display:grid; gap:3px; }
+.blog-music-recommendations a strong { font-size:11px; font-weight:500; }
+.blog-music-recommendations a small { color:var(--blog-muted); font-size:9px; }
+.blog-music-recommendations a:hover { color:var(--blog-accent-text); }
 .blog-floating-player { position:fixed; z-index:120; right:max(24px,env(safe-area-inset-right)); bottom:max(24px,env(safe-area-inset-bottom)); width:min(350px,calc(100vw - 32px)); }
 .blog-player-capsule { display:flex; align-items:center; margin-left:auto; width:270px; max-width:100%; border:1px solid var(--blog-line); border-radius:40px; padding:6px; background:color-mix(in srgb,var(--blog-card) 95%,transparent); backdrop-filter:blur(22px); box-shadow:0 8px 30px #0003,inset 0 1px 0 #ffffff0e; }
 .blog-root .blog-player-open { display:flex; align-items:center; gap:10px; flex:1; min-width:0; text-align:left; padding:0; }

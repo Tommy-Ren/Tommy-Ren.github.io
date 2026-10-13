@@ -9,7 +9,7 @@
     "build": "tsc -b && vite build && vite build --ssr src/blog/render.tsx --outDir .preview/blog-ssr && node scripts/build-blog.mjs",
     "preview": "vite preview --host 127.0.0.1",
     "typecheck": "tsc --noEmit",
-    "test:blog": "node --test scripts/blog-content.test.mjs",
+    "test:blog": "node --test scripts/blog-content.test.mjs scripts/music-playback.test.mjs scripts/music-catalog.test.mjs",
     "test:backend": "node --test supabase/tests/*.test.mjs"
   },
   "dependencies": {

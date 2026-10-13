@@ -16,8 +16,8 @@ export interface BlogTranslationRecord {
   provider: 'manual' | 'deepl'; updated_at: string;
 }
 
-export async function translateArticle(database: SupabaseClient, postId: string, regenerate = false) {
-  const { data, error } = await database.functions.invoke('blog-translate', { body: { postId, regenerate } });
+async function translateContent(database: SupabaseClient, body: { postId?: string; photoId?: string; regenerate: boolean }) {
+  const { data, error } = await database.functions.invoke('blog-translate', { body });
   if (error) {
     let message = '翻译服务暂不可用，请检查 blog-translate 是否已部署，再重试。原文已保存。';
     try { const body = await error.context?.json(); if (body?.error) message = body.error; } catch { /* Safe fallback. */ }
@@ -26,8 +26,15 @@ export async function translateArticle(database: SupabaseClient, postId: string,
   if (data?.error) throw new Error(data.error);
   return data as { status: 'cached' | 'translated'; locale: 'en' | 'zh' };
 }
+export const translateArticle = (database: SupabaseClient, postId: string, regenerate = false) => translateContent(database, { postId, regenerate });
+export const translatePhoto = (database: SupabaseClient, photoId: string, regenerate = false) => translateContent(database, { photoId, regenerate });
+export interface PhotoTranslationRecord {
+  photo_id: string; locale: 'en' | 'zh'; source_version: string; title: string; caption: string;
+  provider: 'manual' | 'deepl'; updated_at: string;
+}
 export interface BlogPhotoRecord extends BlogPhoto {
   published: boolean; sort_order: number; created_at: string; updated_at: string;
+  source_language: 'en' | 'zh'; content_version: string;
 }
 export interface BlogLinkRecord extends BlogLink {
   published: boolean; sort_order: number; created_at: string; updated_at: string;
@@ -106,11 +113,23 @@ export async function loadPublishedContent(slug?: string, locale: 'en' | 'zh' = 
   const metadataColumns = 'id,slug,title,summary,category,tags,cover,published_on,reading_minutes,source_language,content_version';
   const [records, photos, links, settingsResult] = await Promise.all([
     publicRows<Omit<BlogPostRecord, 'markdown'>>( 'blog_posts', metadataColumns, 'published_on'),
-    publicRows<BlogPhotoRecord>('blog_photos', 'id,title,caption,image_url,source_url,credit,is_own,sort_order', 'sort_order'),
+    publicRows<BlogPhotoRecord>('blog_photos', 'id,title,caption,image_url,source_url,credit,is_own,sort_order,source_language,content_version', 'sort_order'),
     publicRows<BlogLinkRecord>('blog_links', 'id,title,kind,description,href,symbol,color,sort_order', 'sort_order'),
     database.from('blog_settings').select('*').eq('id', 'main').single(),
   ]);
   if (settingsResult.error) throw settingsResult.error;
+  const photoTranslations: PhotoTranslationRecord[] = [];
+  for (let start = 0; ; start += 200) {
+    const result = await database.from('blog_photo_translations').select('*').eq('locale', locale).order('photo_id').range(start, start + 199);
+    if (result.error) break;
+    photoTranslations.push(...result.data as PhotoTranslationRecord[]);
+    if (result.data.length < 200) break;
+  }
+  const localizedPhotos = photos.map(photo => {
+    const translated = photo.source_language === locale ? null : photoTranslations.find(item => item.photo_id === photo.id && item.source_version === photo.content_version);
+    return { ...photo, title: translated?.title ?? photo.title, caption: translated?.caption ?? photo.caption,
+      language: translated ? locale : photo.source_language };
+  });
   const translations: BlogTranslationRecord[] = [];
   for (let start = 0; ; start += 200) {
     const result = await database.from('blog_post_translations')
@@ -146,5 +165,5 @@ export async function loadPublishedContent(slug?: string, locale: 'en' | 'zh' = 
       if (index >= 0) posts.splice(index, 1);
     }
   }
-  return { posts, photos, links, settings: settingsResult.data as BlogSettingsRecord, source: 'supabase' };
+  return { posts, photos: localizedPhotos, links, settings: settingsResult.data as BlogSettingsRecord, source: 'supabase' };
 }

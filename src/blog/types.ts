@@ -23,6 +23,7 @@ export interface BlogContent {
 }
 
 export interface BlogPhoto {
+  language?: 'en' | 'zh';
   id: string;
   title: string;
   caption: string;

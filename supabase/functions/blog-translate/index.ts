@@ -5,6 +5,7 @@ import { gfmFromMarkdown, gfmToMarkdown } from 'npm:mdast-util-gfm@3.1.0';
 import { gfm } from 'npm:micromark-extension-gfm@3.0.0';
 import { XMLParser } from 'npm:fast-xml-parser@5.11.2';
 import { createTranslationEngine } from './translate.mjs';
+import { translatePhotoText } from './photo.mjs';
 
 const translate = createTranslationEngine({ fromMarkdown, toMarkdown, XMLParser, extensions: [gfm()],
   mdastExtensions: [gfmFromMarkdown()], markdownExtensions: [gfmToMarkdown()] });
@@ -29,7 +30,24 @@ Deno.serve(async (request: Request) => {
     if (Number(request.headers.get('Content-Length')) > 2048) return reply({ error: 'Request too large' }, 413);
     const raw = await request.text();
     if (raw.length > 2048) return reply({ error: 'Request too large' }, 413);
-    const { postId, regenerate } = JSON.parse(raw);
+    const { postId, photoId, regenerate } = JSON.parse(raw);
+    if (photoId !== undefined) {
+      if (postId !== undefined || typeof photoId !== 'string' || !/^[0-9a-f-]{36}$/i.test(photoId)) return reply({ error: 'Invalid photo ID' }, 400);
+      const result = await database.from('blog_photos').select('*').eq('id', photoId).single();
+      if (result.error || !result.data) return reply({ error: '照片不存在。' }, 404);
+      const photo = result.data;
+      const locale = photo.source_language === 'en' ? 'zh' : 'en';
+      const cached = await database.from('blog_photo_translations').select('source_version').eq('photo_id', photoId).eq('locale', locale).maybeSingle();
+      if (cached.error) return reply({ error: '照片译文数据库尚未配置。' }, 503);
+      if (cached.data?.source_version === photo.content_version && regenerate !== true) return reply({ status: 'cached', locale });
+      const key = Deno.env.get('DEEPL_API_KEY')?.trim();
+      if (!key) return reply({ error: '请在 Supabase Secrets 添加 DEEPL_API_KEY。' }, 503);
+      const output = await translatePhotoText(photo, key, AbortSignal.timeout(60000));
+      const saved = await database.rpc('save_photo_translation', { p_photo_id: photoId, p_locale: locale,
+        p_source_version: photo.content_version, p_title: output.title, p_caption: output.caption });
+      if (saved.error) return reply({ error: saved.error.code === '40001' ? '翻译期间照片说明发生修改，请重新生成。' : '照片译文未能保存，请重试。' }, 409);
+      return reply({ status: 'translated', locale });
+    }
     if (typeof postId !== 'string' || !/^[0-9a-f-]{36}$/i.test(postId)) return reply({ error: 'Invalid article ID' }, 400);
     const result = await database.from('blog_posts').select('*').eq('id', postId).single();
     if (result.error || !result.data) return reply({ error: '文章不存在。' }, 404);
