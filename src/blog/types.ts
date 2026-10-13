@@ -1,4 +1,7 @@
 export interface BlogPost {
+  id?: string;
+  author?: { id: string; display_name: string; avatar: string };
+  views?: number;
   slug: string;
   title: string;
   date: string;

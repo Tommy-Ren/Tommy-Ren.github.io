@@ -5,6 +5,7 @@ import type { BlogContent, BlogLink, BlogPhoto, BlogPost, BlogSettings } from '.
 import { selectTranslation } from './translations.mjs';
 
 export interface BlogPostRecord {
+  author_id: string; author?: { id: string; display_name: string; avatar: string }; stats?: { views: number } | null;
   id: string; slug: string; title: string; summary: string; markdown: string;
   category: string; tags: string[]; cover: string; published: boolean;
   published_on: string; reading_minutes: number; created_at: string; updated_at: string;
@@ -110,7 +111,7 @@ async function publicRows<T>(table: string, columns: string, order: string): Pro
 export async function loadPublishedContent(slug?: string, locale: 'en' | 'zh' = 'en'): Promise<BlogContent> {
   const database = getBlogClient();
   if (!database) throw new Error(getBackendProblem() || '数据库没有连接。');
-  const metadataColumns = 'id,slug,title,summary,category,tags,cover,published_on,reading_minutes,source_language,content_version';
+  const metadataColumns = 'id,slug,title,summary,category,tags,cover,published_on,reading_minutes,source_language,content_version,author_id,author:blog_profiles(id,display_name,avatar),stats:blog_article_stats(views)';
   const [records, photos, links, settingsResult] = await Promise.all([
     publicRows<Omit<BlogPostRecord, 'markdown'>>( 'blog_posts', metadataColumns, 'published_on'),
     publicRows<BlogPhotoRecord>('blog_photos', 'id,title,caption,image_url,source_url,credit,is_own,sort_order,source_language,content_version', 'sort_order'),
@@ -140,6 +141,7 @@ export async function loadPublishedContent(slug?: string, locale: 'en' | 'zh' = 
     if (result.data.length < 200) break;
   }
   const toPost = (record: Omit<BlogPostRecord, 'markdown'>, translation: BlogTranslationRecord | null): BlogPost => ({
+    id: record.id, author: record.author, views: record.stats?.views ?? 0,
     slug: record.slug, title: translation?.title ?? record.title, date: record.published_on,
     summary: translation?.summary ?? record.summary, category: translation?.category ?? record.category,
     tags: translation?.tags ?? record.tags, cover: record.cover, readingMinutes: record.reading_minutes,
@@ -148,7 +150,7 @@ export async function loadPublishedContent(slug?: string, locale: 'en' | 'zh' = 
   });
   const posts = records.map(record => toPost(record, selectTranslation(record, translations, locale)));
   if (slug) {
-    const result = await database.from('blog_posts').select('*').eq('slug', slug).eq('published', true).maybeSingle();
+    const result = await database.from('blog_posts').select('*,author:blog_profiles(id,display_name,avatar),stats:blog_article_stats(views)').eq('slug', slug).eq('published', true).maybeSingle();
     if (result.error) throw result.error;
     if (result.data) {
       const record = result.data as BlogPostRecord;
