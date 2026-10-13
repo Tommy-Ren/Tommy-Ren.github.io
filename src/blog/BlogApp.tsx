@@ -1,3 +1,5 @@
+import { navigateBlog } from './navigation';
+import PasswordSettings from './PasswordSettings';
 import { AccountProvider, AccountMenu, AccountDialogHost, useAccount, PostIdentity, Comments } from './Community';
 import { useLocale, LanguageSwitch } from '../i18n/Locale';
 import { useEffect, useRef, useState, type ReactNode, type ComponentType } from 'react';
@@ -165,7 +167,7 @@ function Post({ post, posts, settings }: { post: BlogPost; posts: BlogPost[]; se
         {post.language && post.language !== locale && <p className="blog-translation-note" lang={locale}>{locale === 'en' ? 'An English translation is not available yet. Showing the Chinese original.' : '中文译文尚未就绪，当前显示英文原文。'}</p>}
         {post.cover && <img className="blog-post-cover" src={post.cover} alt={t("文章封面")} width="1000" height="550" />}
         <div ref={article} className="blog-prose" dangerouslySetInnerHTML={{ __html: post.html }} />
-        <div className="blog-post-end"><Sparkles size={18} /><p>{t("感谢读到这里。下一个想法，再见。")}</p>{settings.contact_email && <a href={`mailto:${settings.contact_email}?subject=${encodeURIComponent(`关于文章：${post.title}`)}`}>{t("与我聊聊")}<ArrowUpRight size={15} /></a>}</div>
+
         <Comments key={post.id} postId={post.id} /><nav className="blog-adjacent-posts" aria-label={t("相邻文章")}>{posts[index + 1] ? <a href={articleUrl(posts[index + 1])}><span><ArrowLeft size={14} />{t("上一篇")}</span><strong>{posts[index + 1].title}</strong></a> : <div />} {posts[index - 1] ? <a href={articleUrl(posts[index - 1])}><span>{t("下一篇")}<ArrowRight size={14} /></span><strong>{posts[index - 1].title}</strong></a> : <div />}</nav>
       </article>
       <aside className="blog-reading-sidebar"><div className="blog-card blog-toc"><span className="blog-eyebrow">{t("ON THIS PAGE")}</span><h2>{t("这一页")}</h2>{post.toc.length ? <nav aria-label={t("文章目录")}>{post.toc.map((heading) => <a className={heading.level >= 3 ? `blog-toc-child blog-toc-level-${heading.level}` : ''} href={`#${heading.id}`} key={heading.id} aria-current={activeHeading === heading.id ? 'location' : undefined}>{heading.title}</a>)}</nav> : <p className="blog-muted">{t("一篇短短的随笔。")}</p>}<div className="blog-toc-progress"><span>{t("阅读进度")}</span><span>{progress}%</span></div><a className="blog-toc-top" href="#blog-main"><ArrowUp size={14} />{t("回到顶部")}</a></div><div className="blog-reading-note"><span className="blog-eyebrow">{t("A NOTE TO MYSELF")}</span><p>{t("写下来，")}<br />{t("也是一次重新理解。")}</p></div></aside>
@@ -189,17 +191,25 @@ function NotFound() {
   return <div className="blog-card blog-empty blog-not-found"><span className="blog-eyebrow">{t("404 / A SMALL DETOUR")}</span><h1>{t("这一页，还没写下。")}</h1><p>{t("也许链接走岔了。回到首页，继续探索吧。")}</p><a className="blog-button" href="/blog/home/">{t("回到博客首页")}<ArrowRight size={16} /></a></div>;
 }
 
-function AdminLoader() {
+function AdminLoader({ adminOnly = false }: { adminOnly?: boolean }) {
+  const account = useAccount();
+  useEffect(() => {
+    if (!adminOnly) return;
+    if (new URLSearchParams(location.search).get('mode') === 'recovery') { navigateBlog('/blog/account/' + location.search,true); return; }
+    if (account.ready && !account.isAdmin) navigateBlog('/blog/home/',true);
+  }, [adminOnly, account.ready, account.isAdmin]);
   const { t, locale } = useLocale();
-  const [Component, setComponent] = useState<ComponentType | null>(null);
+  const [Component, setComponent] = useState<ComponentType<{ adminOnly?: boolean }> | null>(null);
   const [failed, setFailed] = useState(false);
   useEffect(() => {
+    if (!account.ready || (adminOnly && !account.isAdmin)) return;
     let active = true;
     import('./admin/AdminApp').then(module => { if (active) setComponent(() => module.default); }).catch(() => { if (active) setFailed(true); });
     return () => { active = false; };
-  }, []);
-  if (Component) return <Component />;
-  return <div className="blog-card blog-empty" role="status"><h1>{t(failed ? '后台暂时没有打开。' : '正在打开管理后台。')}</h1><p>{t(failed ? '请刷新后重试。' : '稍等片刻。')}</p>{failed && <button className="blog-button" onClick={() => window.location.reload()}>{t("重新加载")}</button>}</div>;
+  }, [adminOnly, account.ready, account.isAdmin]);
+  if (adminOnly && (!account.ready || !account.isAdmin)) return null;
+  if (Component) return <Component adminOnly={adminOnly} />;
+  return <div className="blog-card blog-empty" role="status"><h1>{locale === 'en' ? (failed ? 'Unable to open your workspace.' : 'Opening your workspace…') : (failed ? '暂时无法打开工作台。' : '正在打开工作台…')}</h1><p>{t(failed ? '请刷新后重试。' : '稍等片刻。')}</p>{failed && <button className="blog-button" onClick={() => window.location.reload()}>{t("重新加载")}</button>}</div>;
 }
 
 export default function BlogApp({ data, onRetry }: { data: BlogPageData; onRetry?: () => void }) {
@@ -214,7 +224,8 @@ function BlogShell({ data, onRetry }: { data: BlogPageData; onRetry?: () => void
   const feedUrl = getFeedUrl();
   const [theme, setTheme] = useState<'midnight' | 'fresh'>('midnight');
   const page = data.route.page;
-  useEffect(() => { if (page !== 'admin' && usesDatabase()) void loadStatistics().catch(() => {}); }, [page]);
+  const workspace = ['admin','studio','account'].includes(page);
+  useEffect(() => { if (!workspace && usesDatabase()) void loadStatistics().catch(() => {}); }, [page]);
   const post = page === 'post' ? data.content.posts.find((item) => item.slug === data.route.slug) : undefined;
   useEffect(() => {
     try { const saved = localStorage.getItem('tommy-blog-theme'); if (saved === 'midnight' || saved === 'fresh') setTheme(saved); } catch { /* The default palette also works without storage. */ }
@@ -229,7 +240,7 @@ function BlogShell({ data, onRetry }: { data: BlogPageData; onRetry?: () => void
     <FloatingPlayer page={page} />
     <a className="blog-skip-link" href="#blog-main">{t("跳到页面内容")}</a>
     <div className="blog-shell"><header className="blog-header"><a className="blog-brand" href="/blog/home/" aria-label={t("Tommy 博客首页")}>{t("tommy")}<span>.</span><small>{t("THE BLOG")}</small></a><nav aria-label={t("博客导航")}>{navigation.map(([key, label]) => <a href={`/blog/${key}/`} key={key} aria-current={page === key || key === 'articles' && page === 'post' ? 'page' : undefined}>{t(label)}</a>)}</nav><div className="blog-header-actions"><LanguageSwitch /><span className="blog-location"><i />{t("VANCOUVER, CA")}</span><button className="blog-theme-toggle" aria-label={t(theme === 'midnight' ? '切换到清新浅色主题' : '切换到午夜紫色主题')} onClick={toggleTheme}>{theme === 'midnight' ? <Sun size={17} /> : <Moon size={17} />}</button><AccountMenu /></div></header>
-      <main id="blog-main" tabIndex={-1} className={`blog-main blog-page-${page}`}>{page !== 'admin' && data.live?.status === 'loading' ? <div className="blog-card blog-empty blog-live-status" role="status"><Sparkles size={28} /><h1>{t("正在打开博客。")}</h1><p>{t("稍等片刻，文字即将到来。")}</p></div> : page !== 'admin' && data.live?.status === 'error' ? <div className="blog-card blog-empty blog-live-status" role="alert"><h1>{t("稍后再读。")}</h1><p>{t(data.live.message || '博客内容暂时没有加载成功，请稍后再试。')}</p><button className="blog-button" onClick={onRetry}>{t("重新加载")}<ArrowRight size={16} /></button></div> : page === 'admin' ? <AdminLoader /> : page === 'home' ? <Home posts={data.content.posts} photos={photos} resources={resources} settings={settings} /> : page === 'articles' ? <Articles posts={data.content.posts} /> : page === 'post' && post ? <Post post={post} posts={data.content.posts} settings={settings} /> : page === 'photos' ? <Photos photos={photos} local={data.content.source !== 'supabase'} /> : page === 'collections' ? <Collections resources={resources} /> : page === 'about' ? <About settings={settings} /> : <NotFound />}</main>
+      <main id="blog-main" tabIndex={-1} className={`blog-main blog-page-${page}`}>{!workspace && data.live?.status === 'loading' ? <div className="blog-card blog-empty blog-live-status" role="status"><Sparkles size={28} /><h1>{t("正在打开博客。")}</h1><p>{t("稍等片刻，文字即将到来。")}</p></div> : !workspace && data.live?.status === 'error' ? <div className="blog-card blog-empty blog-live-status" role="alert"><h1>{t("稍后再读。")}</h1><p>{t(data.live.message || '博客内容暂时没有加载成功，请稍后再试。')}</p><button className="blog-button" onClick={onRetry}>{t("重新加载")}<ArrowRight size={16} /></button></div> : page === 'admin' ? <AdminLoader adminOnly /> : page === 'studio' ? <AdminLoader /> : page === 'account' ? <PasswordSettings /> : page === 'home' ? <Home posts={data.content.posts} photos={photos} resources={resources} settings={settings} /> : page === 'articles' ? <Articles posts={data.content.posts} /> : page === 'post' && post ? <Post post={post} posts={data.content.posts} settings={settings} /> : page === 'photos' ? <Photos photos={photos} local={data.content.source !== 'supabase'} /> : page === 'collections' ? <Collections resources={resources} /> : page === 'about' ? <About settings={settings} /> : <NotFound />}</main>
       <footer className="blog-footer"><span>© {settings.display_name} <span className="blog-footer-divider">/</span> {t("好奇心，慢慢生长。")}</span><div><a href="/blog/credits.html">{t("素材说明")}</a>{isAdmin && <a href="/blog/admin/">Admin</a>}{feedUrl && <a href={feedUrl} aria-label={t("订阅博客 RSS")}>{t("RSS")}</a>}<a href="https://github.com/snowhejia/momo-blog" target="_blank" rel="noopener noreferrer">{t("Inspired by momo-blog")}<ArrowUpRight size={12} /></a><span className="blog-footer-star" aria-hidden="true">✳</span></div></footer>
     </div>
   </div>;

@@ -30,7 +30,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
         const result = await client.auth.getUser(); if (result.error) throw result.error;
         const next = result.data.user;
         if (!valid()) return;
-        setUser(next); setAdmin(false); setProfile(null);
+        setReady(false); setUser(next); setAdmin(false); setProfile(null);
         if (next?.email_confirmed_at) {
           let record = await client.from('blog_profiles').select('id,display_name,avatar').eq('id', next.id).maybeSingle();
           if (record.error) throw record.error;
@@ -69,7 +69,7 @@ export function AccountMenu() {
   }, []);
   if (!ready) return <span className="community-account-loading" aria-label={zh ? '正在恢复账号' : 'Loading account'} />;
   if (!user) return <button className="blog-portfolio-link" onClick={openAuth}>{zh ? '登录 / 注册' : 'Log in / Sign up'}</button>;
-  return <div className="community-account" ref={root} onKeyDown={e => { if (e.key === 'Escape') { setOpen(false); root.current?.querySelector('button')?.focus(); } }}><button className="community-account-trigger" aria-label={zh ? '我的账号' : 'My account'} aria-expanded={open} onClick={() => setOpen(!open)}><Avatar author={profile} /><ChevronDown size={14} /></button>{open && <div className="community-account-popover"><strong>{profile?.display_name || (zh ? '我的账号' : 'My account')}</strong><small>{isAdmin ? (zh ? '管理员' : 'Administrator') : (zh ? '作者' : 'Writer')}</small>{error ? <button onClick={reload}>{zh ? '重试账号连接' : 'Retry account connection'}</button> : user.email_confirmed_at && profile && <a href="/blog/admin/"><PenLine size={16} />{zh ? '创作工作台' : 'Writing studio'}</a>}<button onClick={() => { setOpen(false); openAuth(); }}><Settings size={16} />{zh ? '个人资料' : 'Edit profile'}</button><button onClick={async () => { const result = await getBlogClient()?.auth.signOut(); if (result?.error) setNotice(result.error.message); else setOpen(false); }}><LogOut size={16} />{zh ? '退出登录' : 'Sign out'}</button>{notice && <p role="alert">{notice}</p>}</div>}</div>;
+  return <div className="community-account" ref={root} onKeyDown={e => { if (e.key === 'Escape') { setOpen(false); root.current?.querySelector('button')?.focus(); } }}><button className="community-account-trigger" aria-label={zh ? '我的账号' : 'My account'} aria-expanded={open} onClick={() => setOpen(!open)}><Avatar author={profile} /><ChevronDown size={14} /></button>{open && <div className="community-account-popover"><strong>{profile?.display_name || (zh ? '我的账号' : 'My account')}</strong><small>{isAdmin ? (zh ? '管理员' : 'Administrator') : (zh ? '作者' : 'Writer')}</small>{error ? <button onClick={reload}>{zh ? '重试账号连接' : 'Retry account connection'}</button> : user.email_confirmed_at && profile && <a href="/blog/studio/"><PenLine size={16} />{zh ? '创作工作台' : 'Writing studio'}</a>}<button onClick={() => { setOpen(false); openAuth(); }}><Settings size={16} />{zh ? '个人资料' : 'Edit profile'}</button><a href="/blog/account/">{zh ? '修改密码' : 'Change password'}</a><button onClick={async () => { const result = await getBlogClient()?.auth.signOut(); if (result?.error) setNotice(result.error.message); else setOpen(false); }}><LogOut size={16} />{zh ? '退出登录' : 'Sign out'}</button>{notice && <p role="alert">{notice}</p>}</div>}</div>;
 }
 
 function AccountDialog({ close }: { close: () => void }) {
@@ -124,7 +124,7 @@ function AccountDialog({ close }: { close: () => void }) {
         const result = await client.auth.signUp({ email: email.trim(), password, options: { emailRedirectTo: new URL('/blog/home/',location.origin).href, data: { display_name: name.trim(), avatar } } });
         if (result.error) throw result.error; setPassword(''); setConfirmPassword(''); setSignupSent(true); setMessage('');
       } else if (mode === 'reset') {
-        const result = await client.auth.resetPasswordForEmail(email.trim(), { redirectTo: new URL('/blog/admin/?mode=recovery',location.origin).href });
+        const result = await client.auth.resetPasswordForEmail(email.trim(), { redirectTo: new URL('/blog/account/?mode=recovery',location.origin).href });
         if (result.error) throw result.error; setMessage(zh ? '如该邮箱可接收邮件，你会收到重置链接。' : 'If this address can receive account emails, a reset link will arrive shortly.');
       } else {
         const result = await client.auth.signInWithPassword({ email: email.trim(), password });

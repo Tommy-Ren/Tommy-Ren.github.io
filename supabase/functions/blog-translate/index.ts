@@ -30,7 +30,22 @@ Deno.serve(async (request: Request) => {
     if (Number(request.headers.get('Content-Length')) > 2048) return reply({ error: 'Request too large' }, 413);
     const raw = await request.text();
     if (raw.length > 2048) return reply({ error: 'Request too large' }, 413);
-    const { postId, photoId, regenerate } = JSON.parse(raw);
+    const { postId, photoId, termKind, termName, regenerate } = JSON.parse(raw);
+    if (termKind !== undefined || termName !== undefined) {
+      if (postId !== undefined || photoId !== undefined || !['category','tag'].includes(termKind) || typeof termName !== 'string' || !termName.trim() || termName.length > 40) return reply({error:'Invalid term'},400);
+      const result = await database.from('blog_terms').select('*').eq('kind',termKind).eq('name',termName).single();
+      if (result.error || !result.data) return reply({error:'Term not found'},404);
+      const term=result.data;
+      const locale=term.source_language==='en'?'zh':'en';
+      const column=locale==='en'?'name_en':'name_zh';
+      if (term[column] && regenerate !== true) return reply({status:'cached',locale});
+      const key=Deno.env.get('DEEPL_API_KEY')?.trim();
+      if (!key) return reply({error:'DeepL is not configured.'},503);
+      const output=await translatePhotoText({title:term.name,caption:'',source_language:term.source_language},key,AbortSignal.timeout(60000));
+      const saved=await database.from('blog_terms').update({[column]:output.title}).eq('kind',termKind).eq('name',termName);
+      if (saved.error) return reply({error:'Unable to save term translation.'},409);
+      return reply({status:'translated',locale});
+    }
     if (photoId !== undefined) {
       if (postId !== undefined || typeof photoId !== 'string' || !/^[0-9a-f-]{36}$/i.test(photoId)) return reply({ error: 'Invalid photo ID' }, 400);
       const result = await database.from('blog_photos').select('*').eq('id', photoId).single();

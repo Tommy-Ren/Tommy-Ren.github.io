@@ -1,3 +1,4 @@
+import TrackTitle from './TrackTitle';
 import { useState } from 'react';
 import { Music2, Pause, Play, SkipBack, SkipForward, Volume2, VolumeX, ListMusic, Repeat, Repeat1, Search, Shuffle } from 'lucide-react';
 import { useLocale } from '../i18n/Locale';
@@ -24,7 +25,7 @@ export default function MusicPlayer() {
     <div className="blog-card-top"><span className="blog-eyebrow">{t('STUDY RADIO')} / {tracks.length} {zh ? '首' : 'TRACKS'}</span><Music2 size={17} /></div>
     <div className="blog-music-now">
       <div className="blog-vinyl" aria-hidden="true"><img src={track.cover} alt="" /><i /></div>
-      <div><span className="blog-music-status">{t(playing ? 'NOW PLAYING' : 'ON THE TURNTABLE')}</span><h2>{track.title}</h2><p><a href={track.sourceUrl} target="_blank" rel="noopener noreferrer">{track.artist}</a>{track.album && <> · {track.album}</>}</p></div>
+      <div><span className="blog-music-status">{t(playing ? 'NOW PLAYING' : 'ON THE TURNTABLE')}</span><h2><TrackTitle title={track.title} /></h2><p><a href={track.sourceUrl} target="_blank" rel="noopener noreferrer">{track.artist}</a>{track.album && <> · {track.album}</>}</p></div>
     </div>
     <div className="blog-music-progress"><input type="range" min="0" max={duration || 1} step=".1" value={Math.min(position, duration || 1)} disabled={!duration} aria-label={t('Playback position')} onChange={event => seek(Number(event.target.value))} /><span>{time(position)}<span>{time(duration)}</span></span></div>
     <div className="blog-music-controls">

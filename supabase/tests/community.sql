@@ -1,5 +1,6 @@
 -- Disposable fixtures: the entire suite rolls back, including synthetic users.
 begin;
+insert into public.blog_terms(kind,name) values('category','test') on conflict do nothing;
 do $$
 declare a uuid:=gen_random_uuid(); b uuid:=gen_random_uuid(); u uuid:=gen_random_uuid(); p uuid:=gen_random_uuid(); d uuid:=gen_random_uuid();
 begin
@@ -38,7 +39,9 @@ do $$ declare affected integer; begin
  insert into public.blog_comments(post_id,body) values(current_setting('test.p')::uuid,'Verified comment');
  begin insert into public.blog_comments(post_id,body) values(current_setting('test.p')::uuid,'Spam');raise exception 'Throttle bypass' using errcode='22000';exception when raise_exception then null;end;
  begin insert into public.blog_article_stats(post_id,views) values(current_setting('test.p')::uuid,1000);raise exception 'Counter spoofed';exception when insufficient_privilege then null;end;
- insert into public.blog_terms(kind,name) values('tag','test-'||left(current_setting('test.b'),8));
+ begin insert into public.blog_terms(kind,name) values('tag','test-'||left(current_setting('test.b'),8));raise exception 'Member created taxonomy';exception when insufficient_privilege then null;end;
+ update public.blog_terms set name_en='tampered';get diagnostics affected=row_count;if affected<>0 then raise exception 'Member translated taxonomy';end if;
+ begin insert into public.blog_posts(slug,title,markdown,category,published) values('bad-term-'||gen_random_uuid(),'x','x','unapproved-'||gen_random_uuid(),true);raise exception 'Unapproved category accepted';exception when insufficient_privilege then null;end;
  update public.blog_profiles set display_name='Updated B' where id=current_setting('test.b')::uuid;
  get diagnostics affected=row_count;if affected<>1 then raise exception 'Own profile update failed';end if;
  update public.blog_profiles set display_name='Impersonated A' where id=current_setting('test.a')::uuid;

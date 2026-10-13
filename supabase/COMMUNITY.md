@@ -20,9 +20,9 @@ Verify delivery using a real external email account: sign up, receive and open t
 ## Permission model
 
 - Public profiles contain a display name and preset avatar key; **no email addresses**.
-- Verified, non-anonymous, non-banned email users can create their own profile, posts, photos, terms and comments.
+- Verified, non-anonymous, non-banned email users can create their own profile, posts, photos and comments.
 - Authors can see/edit/delete their own drafts and publications. Author IDs are immutable. Other authors' drafts are private.
-- Existing administrators retain moderation/site settings access. Only administrators see the footer Admin link; other members open their writing studio from their avatar.
+- Existing administrators retain moderation/site settings access. Only administrators see the footer Admin link; other members open `/blog/studio/` from their avatar. `/blog/admin/` redirects non-administrators to the homepage before mounting the dashboard; the dashboard also verifies its required role with a server RPC. Database RLS continues to enforce ownership independently.
 - Image uploads remain limited to each user's own `blog-media/<user-id>/` prefix and the existing image type/size restrictions. Overwrites remain disabled.
 - DeepL requests and site settings stay administrator-only. Member publishing works independently of translation.
 - Comments are plain text, at most 2,000 characters, and rate limited to one per 30 seconds per account. Authors and administrators can delete them. Comments on unpublished articles are not publicly visible.
@@ -34,4 +34,10 @@ Verify delivery using a real external email account: sign up, receive and open t
 
 Existing checks: `npm run test:blog`, `npm run test:backend`, `npm run build`.
 
-The migration was applied to the configured project on 2026-10-13. Public registration and email confirmation were enabled, and the above redirect URLs were configured. Custom SMTP delivery still requires the account owner's setup and external-email verification.
+The migration was applied to the configured project on 2026-10-13. Public registration and email confirmation were enabled, and the above redirect URLs were configured. The account owner configured custom SMTP and reported receiving a registration email. Password recovery now returns to `/blog/account/?mode=recovery`, available to ordinary users as well as administrators.
+
+## Taxonomy and playback update (2026-10-13)
+
+Apply `migrations/20261013020000_blog_taxonomy.sql` after the community migration and deploy the updated `blog-translate` function. Only administrators can create terms or write their English/Chinese labels. A database trigger rejects unapproved categories/tags in member article writes, including direct API calls. Canonical names remain stable; translated labels are used in both the picker and public feeds. The existing 3 categories and 8 tags have been translated through DeepL.
+
+Blog, studio, account and administrator routes share the persistent audio element. The floating player supports pointer dragging and arrow-key positioning. Manual sequential/repeat-one steps wrap; shuffle steps draw a new item from the bag in either direction. Automatic repeat-one still repeats the current track.

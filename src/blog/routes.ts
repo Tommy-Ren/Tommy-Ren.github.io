@@ -19,7 +19,7 @@ export function resolveBlogPage(pathname: string, content: BlogContent, search =
   let path: string;
   try { path = decodeURI(pathname).replace(/\/index\.html$/, '/').replace(/\/+$/, '') || '/'; }
   catch { return pageData({ page: 'not-found' }, content); }
-  const pages = ['home', 'articles', 'photos', 'collections', 'about', 'admin'] as const;
+  const pages = ['home', 'articles', 'photos', 'collections', 'about', 'admin', 'studio', 'account'] as const;
   const selected = requestedArticleSlug(pathname, search);
   if (selected && content.posts.some(post => post.slug === selected)) return pageData({ page: 'post', slug: selected }, content);
   if (new URLSearchParams(search).has('post') && path === '/blog/articles') return pageData({ page: 'not-found' }, content);

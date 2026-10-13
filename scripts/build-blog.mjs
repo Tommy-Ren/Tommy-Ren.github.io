@@ -25,7 +25,7 @@ export function renderDocument(template, data, markup, feedUrl = '/blog/feed.xml
     '<meta property="og:locale" content="en_CA" />',
     '<meta name="twitter:card" content="summary_large_image" />',
     ...(meta.date ? [`<meta property="article:published_time" content="${meta.date}T00:00:00Z" />`] : []),
-    ...(['not-found', 'admin'].includes(data.route.page) ? ['<meta name="robots" content="noindex" />'] : []),
+    ...(['not-found', 'admin', 'studio', 'account'].includes(data.route.page) ? ['<meta name="robots" content="noindex" />'] : []),
   ].join('\n    ');
   return template
     .replace(/<title>[\s\S]*?<\/title>\s*/gi, '')
@@ -60,14 +60,14 @@ export async function buildBlog({ outputDir = path.join(root, 'dist'), contentDi
   const content = await loadBlogContent(contentDir ? { contentDir } : undefined);
   const { renderBlog } = await import(pathToFileURL(rendererPath).href);
   const template = await readFile(path.join(outputDir, 'blog', 'home', 'index.html'), 'utf8');
-  const routes = ['home', 'articles', 'photos', 'collections', 'about', 'admin'].map(page => ({ page }));
+  const routes = ['home', 'articles', 'photos', 'collections', 'about', 'admin', 'studio', 'account'].map(page => ({ page }));
   routes.push(...content.posts.map(post => ({ page: 'post', slug: post.slug })), { page: 'not-found' });
   for (const route of routes) {
     const directory = route.page === 'post' ? `articles/${route.slug}` : route.page === 'not-found' ? '404' : route.page;
     const destination = path.join(outputDir, 'blog', directory);
     await mkdir(destination, { recursive: true });
-    const data = createPageData(route, cloud || route.page === 'admin' ? { posts: [], source: cloud ? 'supabase' : 'local' } : content);
-    if (cloud && route.page !== 'admin') data.live = { status: 'loading' };
+    const data = createPageData(route, cloud || ['admin','studio','account'].includes(route.page) ? { posts: [], source: cloud ? 'supabase' : 'local' } : content);
+    if (cloud && !['admin','studio','account'].includes(route.page)) data.live = { status: 'loading' };
     const document = renderDocument(template, data, renderBlog(data), feedUrl);
     await writeFile(path.join(destination, 'index.html'), document, 'utf8');
     if (route.page === 'not-found') await writeFile(path.join(outputDir, '404.html'), document, 'utf8');

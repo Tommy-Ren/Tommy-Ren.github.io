@@ -30,18 +30,14 @@ test('shuffle plays all 100 tracks before repeating and includes every track in 
   assert.equal(new Set(second).size, 100);
 });
 
-test('shuffle previous and forward retrace listening history without consuming unseen tracks', () => {
+test('shuffle previous draws a new random track even at the beginning', () => {
   let queue = createPlaybackQueue(5, 0, () => .5);
-  queue = movePlaybackQueue(queue, 5, 'shuffle', 1);
-  const first = queue.current;
-  queue = movePlaybackQueue(queue, 5, 'shuffle', 1);
-  const second = queue.current;
-  const remaining = queue.remaining;
-  queue = movePlaybackQueue(queue, 5, 'shuffle', -1);
-  assert.equal(queue.current, first);
-  queue = movePlaybackQueue(queue, 5, 'shuffle', 1);
-  assert.equal(queue.current, second);
-  assert.deepEqual(queue.remaining, remaining);
+  const heard = [queue.current];
+  for (const direction of [-1, 1, -1, 1]) {
+    queue = movePlaybackQueue(queue, 5, 'shuffle', direction, () => .5);
+    heard.push(queue.current);
+  }
+  assert.equal(new Set(heard).size, 5);
 });
 
 test('one-track shuffle stays playable and previous at the start stays on the current track', () => {

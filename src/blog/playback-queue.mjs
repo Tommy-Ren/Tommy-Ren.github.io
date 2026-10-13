@@ -1,4 +1,4 @@
-/** A shuffle bag plus listening history, independent of the audio element. */
+/** Each manual shuffle step draws from a shuffled bag in either direction. */
 function shuffle(values, random) {
   const result = [...values];
   for (let i = result.length - 1; i > 0; i--) {
@@ -22,14 +22,6 @@ export function createPlaybackQueue(count, current = 0, random = Math.random) {
 
 export function movePlaybackQueue(queue, count, mode, direction, random = Math.random) {
   if (mode !== 'shuffle') return createPlaybackQueue(count, (queue.current + (direction < 0 ? -1 : 1) + count) % count, random);
-  if (direction < 0) {
-    const cursor = Math.max(0, queue.cursor - 1);
-    return { ...queue, cursor, current: queue.history[cursor] };
-  }
-  if (queue.cursor < queue.history.length - 1) {
-    const cursor = queue.cursor + 1;
-    return { ...queue, cursor, current: queue.history[cursor] };
-  }
   let remaining = [...queue.remaining];
   if (!remaining.length) {
     remaining = shuffle(Array.from({ length: count }, (_, index) => index), random);

@@ -18,7 +18,7 @@ export default function BlogRuntime({ initialData }: { initialData: BlogPageData
       const anchor = event.target instanceof Element ? event.target.closest('a') : null;
       if (!anchor || anchor.hasAttribute('download') || anchor.target && anchor.target !== '_self') return;
       const url = new URL(anchor.href);
-      const publicBlog = (path: string) => /^\/blog\/?$/.test(path) || /^\/blog\/(home|articles|photos|collections|about)(\/|$)/.test(path);
+      const publicBlog = (path: string) => /^\/blog\/?$/.test(path) || /^\/blog\/(home|articles|photos|collections|about|studio|account|admin)(\/|$)/.test(path);
       if (url.origin !== location.origin || !publicBlog(url.pathname) || !publicBlog(location.pathname)) return;
       if (url.pathname === location.pathname && url.search === location.search && url.hash) return;
       event.preventDefault();
@@ -38,10 +38,14 @@ export default function BlogRuntime({ initialData }: { initialData: BlogPageData
     document.querySelector('meta[name="description"]')?.setAttribute('content', post?.summary || (locale === 'en' ? 'Notes on code, curiosity, and everyday discoveries. A personal blog by Tommy Ren.' : '关于代码、好奇心与生活的记录。Tommy Ren 的个人博客。'));
   }, [data, locale]);
   useEffect(() => {
-    if (initialData.route.page === 'admin') return;
     let active = true;
     const pathname = window.location.pathname;
     const search = window.location.search;
+    const workspace = resolveBlogPage(pathname, {posts:[]}, search);
+    if (['admin','studio','account'].includes(workspace.route.page)) {
+      setData(previous => ({route:workspace.route,content:previous.content}));
+      return;
+    }
     if (!usesDatabase()) {
       // Direct links stay pre-rendered; internal navigation fetches their content
       // without replacing the document or its persistent audio element.

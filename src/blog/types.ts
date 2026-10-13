@@ -57,7 +57,7 @@ export interface BlogSettings {
   linkedin_url: string;
 }
 
-export type BlogPage = 'home' | 'articles' | 'photos' | 'collections' | 'about' | 'post' | 'admin' | 'not-found';
+export type BlogPage = 'home' | 'articles' | 'photos' | 'collections' | 'about' | 'post' | 'admin' | 'studio' | 'account' | 'not-found';
 
 export interface BlogPageData {
   route: { page: BlogPage; slug?: string };

@@ -17,7 +17,7 @@ export interface BlogTranslationRecord {
   provider: 'manual' | 'deepl'; updated_at: string;
 }
 
-async function translateContent(database: SupabaseClient, body: { postId?: string; photoId?: string; regenerate: boolean }) {
+async function translateContent(database: SupabaseClient, body: { postId?: string; photoId?: string; termKind?: 'category'|'tag'; termName?:string; regenerate: boolean }) {
   const { data, error } = await database.functions.invoke('blog-translate', { body });
   if (error) {
     let message = '翻译服务暂不可用，请检查 blog-translate 是否已部署，再重试。原文已保存。';
@@ -29,6 +29,9 @@ async function translateContent(database: SupabaseClient, body: { postId?: strin
 }
 export const translateArticle = (database: SupabaseClient, postId: string, regenerate = false) => translateContent(database, { postId, regenerate });
 export const translatePhoto = (database: SupabaseClient, photoId: string, regenerate = false) => translateContent(database, { photoId, regenerate });
+export const translateTerm = (database:SupabaseClient,termKind:'category'|'tag',termName:string) => translateContent(database,{termKind,termName,regenerate:false});
+export interface BlogTerm {kind:'category'|'tag';name:string;source_language:'en'|'zh';name_en:string|null;name_zh:string|null}
+export const termLabel = (term:BlogTerm,locale:'en'|'zh') => (locale==='en'?term.name_en:term.name_zh)||term.name;
 export interface PhotoTranslationRecord {
   photo_id: string; locale: 'en' | 'zh'; source_version: string; title: string; caption: string;
   provider: 'manual' | 'deepl'; updated_at: string;
@@ -140,11 +143,14 @@ export async function loadPublishedContent(slug?: string, locale: 'en' | 'zh' = 
     translations.push(...result.data as BlogTranslationRecord[]);
     if (result.data.length < 200) break;
   }
+  const termsResult=await database.from('blog_terms').select('*');
+  const terms=(termsResult.data || []) as BlogTerm[];
+  const label=(kind:'category'|'tag',name:string,fallback:string)=>{const term=terms.find(t=>t.kind===kind && t.name===name);return term?termLabel(term,locale):fallback;};
   const toPost = (record: Omit<BlogPostRecord, 'markdown'>, translation: BlogTranslationRecord | null): BlogPost => ({
     id: record.id, author: record.author, views: record.stats?.views ?? 0,
     slug: record.slug, title: translation?.title ?? record.title, date: record.published_on,
-    summary: translation?.summary ?? record.summary, category: translation?.category ?? record.category,
-    tags: translation?.tags ?? record.tags, cover: record.cover, readingMinutes: record.reading_minutes,
+    summary: translation?.summary ?? record.summary, category: label('category',record.category,translation?.category ?? record.category),
+    tags: record.tags.map((name,i)=>label('tag',name,translation?.tags[i]??name)), cover: record.cover, readingMinutes: record.reading_minutes,
     sourceLanguage: record.source_language, language: translation ? locale : record.source_language,
     translationProvider: translation?.provider, html: '', toc: [],
   });

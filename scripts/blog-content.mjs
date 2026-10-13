@@ -119,7 +119,7 @@ export function createPageData(route, content) {
 }
 
 export function blogPageMetadata(route, content) {
-  const labels = { home: 'Home', articles: 'Articles', photos: 'Photos', collections: 'Bookmarks', about: 'About', admin: 'Admin', 'not-found': 'Page not found' };
+  const labels = { home: 'Home', articles: 'Articles', photos: 'Photos', collections: 'Bookmarks', about: 'About', admin: 'Admin', studio: 'Writing studio', account: 'Account', 'not-found': 'Page not found' };
   const post = route.page === 'post' ? content.posts.find(item => item.slug === route.slug) : null;
   const relativeUrl = post ? `/blog/articles/${post.slug}/` : route.page === 'post' && route.slug
     ? `/blog/articles/?post=${encodeURIComponent(route.slug)}` : `/blog/${route.page === 'not-found' ? '404' : route.page}/`;

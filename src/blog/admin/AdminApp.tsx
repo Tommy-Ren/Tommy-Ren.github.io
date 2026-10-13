@@ -1,7 +1,8 @@
+import { navigateBlog } from '../navigation';
 import TaxonomyPicker from './TaxonomyPicker';
 import { useAccount } from '../Community';
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
-import type { Session, SupabaseClient, User } from '@supabase/supabase-js';
+import type { SupabaseClient, User } from '@supabase/supabase-js';
 import { ArrowLeft, ArrowUpRight, BookOpen, Check, ChevronRight, Copy, ExternalLink, FileText, Image, Link2, Loader2, LogOut, Plus, Save, Settings, ShieldCheck, Trash2, Upload, X } from 'lucide-react';
 import { getBlogClient, getBackendProblem, getReadingMinutes, validatePostInput, translateArticle, translatePhoto, type BlogPostRecord, type BlogPhotoRecord, type BlogLinkRecord, type BlogSettingsRecord } from '../backend';
 import { renderMarkdown } from '../markdown.mjs';
@@ -25,7 +26,7 @@ function todayInVancouver() {
   const parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Vancouver', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(new Date());
   return ['year', 'month', 'day'].map(type => parts.find(part => part.type === type)?.value).join('-');
 }
-const emptyPost = (): PostDraft => ({ slug: '', title: '', summary: '', markdown: '', category: '随笔', tagsText: '', cover: '', source_language: 'zh', published: false, published_on: todayInVancouver() });
+const emptyPost = (): PostDraft => ({ slug: '', title: '', summary: '', markdown: '', category: '', tagsText: '', cover: '', source_language: 'zh', published: false, published_on: todayInVancouver() });
 const emptyPhoto = (): PhotoDraft => ({ source_language: 'zh', title: '', caption: '', image_url: '', source_url: '', credit: '', is_own: true, published: false, sort_order: 0 });
 const emptyLink = (): LinkDraft => ({ title: '', kind: 'LEARNING / RESOURCE', description: '', href: '', symbol: '↗', color: 'lavender', published: false, sort_order: 0 });
 const errorMessage = (error: unknown) => error instanceof Error ? error.message : typeof error === 'object' && error !== null && 'message' in error ? String(error.message) : '操作未完成，请稍后重试。';
@@ -239,7 +240,7 @@ function PasswordForm({ client, onComplete, onCancel, recovery = false }: { clie
   useEffect(() => { guard.register(Boolean(password || repeat), busy); }, [password, repeat, busy, guard.register]);
   useEffect(() => () => guard.register(false, false), [guard.register]);
   const update = async (event: FormEvent) => { event.preventDefault(); setError(''); if (password.length < 12 || password.length > 128) { setError('新密码请使用 12 到 128 个字符。'); return; } if (password !== repeat) { setError('两次输入的新密码不一致。'); return; } setBusy(true); try { const { error: updateError } = await client.auth.updateUser({ password }); if (updateError) throw updateError; setPassword(''); setRepeat(''); onComplete(); } catch (cause) { setError(reportError(cause)); } finally { setBusy(false); } };
-  return <section className="blog-card admin-password-card"><div className="admin-panel-title"><h2>{recovery ? '设置新密码' : '修改管理员密码'}</h2>{!recovery && <button className="admin-icon-button" aria-label="关闭修改密码" onClick={onCancel} disabled={busy}><X size={18} /></button>}</div><p className="admin-muted">使用独立的长密码，至少 12 个字符。</p>{error && <Notice message={error} />}<form onSubmit={(event) => void update(event)}><fieldset disabled={busy}><Field label="新密码"><input type="password" autoComplete="new-password" required minLength={12} maxLength={128} value={password} onChange={(event) => setPassword(event.target.value)} /></Field><Field label="再次输入新密码"><input type="password" autoComplete="new-password" required minLength={12} maxLength={128} value={repeat} onChange={(event) => setRepeat(event.target.value)} /></Field></fieldset><button className="blog-button" type="submit" disabled={busy}>{busy ? <Spinner>更新中</Spinner> : '更新密码'}</button></form></section>;
+  return <section className="blog-card admin-password-card"><div className="admin-panel-title"><h2>{recovery ? '设置新密码' : '修改密码'}</h2>{!recovery && <button className="admin-icon-button" aria-label="关闭修改密码" onClick={onCancel} disabled={busy}><X size={18} /></button>}</div><p className="admin-muted">使用独立的长密码，至少 12 个字符。</p>{error && <Notice message={error} />}<form onSubmit={(event) => void update(event)}><fieldset disabled={busy}><Field label="新密码"><input type="password" autoComplete="new-password" required minLength={12} maxLength={128} value={password} onChange={(event) => setPassword(event.target.value)} /></Field><Field label="再次输入新密码"><input type="password" autoComplete="new-password" required minLength={12} maxLength={128} value={repeat} onChange={(event) => setRepeat(event.target.value)} /></Field></fieldset><button className="blog-button" type="submit" disabled={busy}>{busy ? <Spinner>更新中</Spinner> : '更新密码'}</button></form></section>;
 }
 
 function Dashboard({ client, user, recovery, clearRecovery }: { client: SupabaseClient; user: User; recovery: boolean; clearRecovery: () => void }) {
@@ -256,13 +257,13 @@ function Dashboard({ client, user, recovery, clearRecovery }: { client: Supabase
       if (!anchor || anchor.target === '_blank' || anchor.hasAttribute('download')) return;
       const url = new URL(anchor.href, window.location.href);
       if (!/^https?:$/.test(url.protocol) || (url.pathname === window.location.pathname && url.search === window.location.search && url.hash)) return;
-      event.preventDefault(); event.stopPropagation(); leave(() => window.location.assign(url.href));
+      event.preventDefault(); event.stopPropagation(); leave(() => navigateBlog(url.href));
     };
     window.addEventListener('beforeunload', beforeUnload); document.addEventListener('click', click, true);
     return () => { window.removeEventListener('beforeunload', beforeUnload); document.removeEventListener('click', click, true); };
   }, [dirty, busy, logoutBusy]);
   const logout = () => leave(() => { void (async () => { setLogoutBusy(true); setNotice(''); try { const { error } = await client.auth.signOut(); if (error) throw error; } catch (cause) { setNotice(reportError(cause)); } finally { setLogoutBusy(false); } })(); });
-  return <GuardContext.Provider value={guard}><div className="blog-admin" data-admin-state="authorized"><header className="admin-heading"><div><span className="blog-eyebrow">YOUR WORDS / YOUR SPACE</span><h1>创作工作台<span>.</span></h1><p>把想法写下来，把喜欢的画面留下来。</p></div><div className="admin-account"><ShieldCheck size={17} /><span>{user.email || '管理员'}<small>{isAdmin ? '管理员' : '作者'}</small></span><button className="admin-icon-button" aria-label="修改管理员密码" onClick={() => leave(() => setPassword(true))} disabled={busy || logoutBusy}><ShieldCheck size={17} /></button><button className="admin-icon-button" aria-label="退出登录" onClick={logout} disabled={busy || logoutBusy}>{logoutBusy ? <Loader2 size={17} className="admin-spinner" /> : <LogOut size={17} />}</button></div></header>{notice && <div className="admin-dismissible"><Notice message={notice} kind="info" /><button className="admin-icon-button" aria-label="关闭提示" onClick={() => setNotice('')}><X size={15} /></button></div>}<div className="admin-layout"><aside className="blog-card admin-sidebar"><span className="blog-eyebrow">WORKSPACE</span><nav aria-label="后台管理">{tabs.filter(item => isAdmin || item.id === 'posts' || item.id === 'photos').map(({ id, title, description, icon: Icon }) => <button key={id} aria-current={tab === id ? 'page' : undefined} onClick={() => { if (tab !== id) leave(() => { setTab(id); setNotice(''); }); }}><Icon size={19} /><span><strong>{title}</strong><small>{description}</small></span><ChevronRight size={14} /></button>)}</nav><div className="admin-sidebar-bottom"><a href="/blog/home/" target="_blank" rel="noopener noreferrer">打开博客<ArrowUpRight size={15} /></a><button onClick={() => leave(() => setPassword(true))}>修改密码<ShieldCheck size={14} /></button><p>草稿只对作者和管理员可见。<br />上传图片为公开资源。</p></div></aside><div className="admin-content">{recovery || password ? <PasswordForm client={client} recovery={recovery} onCancel={() => leave(() => setPassword(false))} onComplete={() => { setPassword(false); clearRecovery(); setNotice('密码操作完成。'); }} /> : tab === 'starter' ? <StarterPanel client={client} user={user} onBusy={register} /> : tab === 'posts' ? <PostsPanel client={client} user={user} /> : tab === 'photos' ? <PhotosPanel client={client} user={user} /> : tab === 'links' ? <LinksPanel client={client} /> : <SettingsPanel client={client} />}</div></div>{dialog && <Confirmation dialog={dialog} close={() => setDialog(null)} />}</div></GuardContext.Provider>;
+  return <GuardContext.Provider value={guard}><div className="blog-admin" data-admin-state="authorized"><header className="admin-heading"><div><span className="blog-eyebrow">YOUR WORDS / YOUR SPACE</span><h1>创作工作台<span>.</span></h1><p>把想法写下来，把喜欢的画面留下来。</p></div><div className="admin-account"><ShieldCheck size={17} /><span>{user.email || '管理员'}<small>{isAdmin ? '管理员' : '作者'}</small></span><button className="admin-icon-button" aria-label="修改密码" onClick={() => leave(() => setPassword(true))} disabled={busy || logoutBusy}><ShieldCheck size={17} /></button><button className="admin-icon-button" aria-label="退出登录" onClick={logout} disabled={busy || logoutBusy}>{logoutBusy ? <Loader2 size={17} className="admin-spinner" /> : <LogOut size={17} />}</button></div></header>{notice && <div className="admin-dismissible"><Notice message={notice} kind="info" /><button className="admin-icon-button" aria-label="关闭提示" onClick={() => setNotice('')}><X size={15} /></button></div>}<div className="admin-layout"><aside className="blog-card admin-sidebar"><span className="blog-eyebrow">WORKSPACE</span><nav aria-label="后台管理">{tabs.filter(item => isAdmin || item.id === 'posts' || item.id === 'photos').map(({ id, title, description, icon: Icon }) => <button key={id} aria-current={tab === id ? 'page' : undefined} onClick={() => { if (tab !== id) leave(() => { setTab(id); setNotice(''); }); }}><Icon size={19} /><span><strong>{title}</strong><small>{description}</small></span><ChevronRight size={14} /></button>)}</nav><div className="admin-sidebar-bottom"><a href="/blog/home/" target="_blank" rel="noopener noreferrer">打开博客<ArrowUpRight size={15} /></a><button onClick={() => leave(() => setPassword(true))}>修改密码<ShieldCheck size={14} /></button><p>草稿只对作者和管理员可见。<br />上传图片为公开资源。</p></div></aside><div className="admin-content">{recovery || password ? <PasswordForm client={client} recovery={recovery} onCancel={() => leave(() => setPassword(false))} onComplete={() => { setPassword(false); clearRecovery(); setNotice('密码操作完成。'); }} /> : tab === 'starter' && isAdmin ? <StarterPanel client={client} user={user} onBusy={register} /> : tab === 'posts' ? <PostsPanel client={client} user={user} /> : tab === 'photos' ? <PhotosPanel client={client} user={user} /> : tab === 'links' && isAdmin ? <LinksPanel client={client} /> : isAdmin ? <SettingsPanel client={client} /> : <PostsPanel client={client} user={user} />}</div></div>{dialog && <Confirmation dialog={dialog} close={() => setDialog(null)} />}</div></GuardContext.Provider>;
 }
 
 function SignIn({ client, initialError = '' }: { client: SupabaseClient; initialError?: string }) {
@@ -271,7 +272,7 @@ function SignIn({ client, initialError = '' }: { client: SupabaseClient; initial
     event.preventDefault(); setError(''); setSuccess(''); setBusy(true);
     try {
       if (mode === 'reset') {
-        const redirectTo = new URL('/blog/admin/?mode=recovery', window.location.origin).href;
+        const redirectTo = new URL('/blog/account/?mode=recovery', window.location.origin).href;
         const { error: authError } = await client.auth.resetPasswordForEmail(email.trim(), { redirectTo }); if (authError) throw authError;
         setSuccess('如果该邮箱可接收密码重置邮件，你会收到链接。请在同一浏览器中打开，设置新密码。');
       } else {
@@ -284,49 +285,31 @@ function SignIn({ client, initialError = '' }: { client: SupabaseClient; initial
   return <div className="blog-admin admin-gate" data-admin-state="signed-out"><section className="blog-card admin-auth"><span className="admin-auth-icon"><ShieldCheck size={27} /></span><span className="blog-eyebrow">A PRIVATE WORKSPACE</span><h1>{mode === 'reset' ? '找回密码' : '欢迎回来'}<span>.</span></h1><p>{mode === 'reset' ? '向你的邮箱发送密码重置链接。' : '登录，继续写下今天的想法。'}</p>{error && <Notice message={error} />}{success && <Notice message={success} kind="success" />}<form onSubmit={(event) => void submit(event)}><fieldset disabled={busy}><Field label="邮箱"><input type="email" required autoComplete="username" value={email} placeholder="you@example.com" onChange={(event) => setEmail(event.target.value)} /></Field>{mode === 'login' && <Field label="密码"><input type="password" required autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} /></Field>}</fieldset><button type="submit" className="blog-button admin-auth-submit" disabled={busy}>{busy ? <Spinner>{mode === 'reset' ? '发送中' : '登录中'}</Spinner> : <>{mode === 'reset' ? '发送重置邮件' : '登录工作台'}<ArrowUpRight size={16} /></>}</button></form><button className="admin-text-button" onClick={() => { setMode(mode === 'login' ? 'reset' : 'login'); setError(''); setSuccess(''); setPassword(''); }} disabled={busy}>{mode === 'reset' ? <><ArrowLeft size={14} />返回登录</> : '忘记密码？'}</button><div className="admin-auth-footer">使用右上角的注册入口创建账号，验证邮箱后即可开始创作。</div></section></div>;
 }
 
-export default function AdminApp() {
+export default function AdminApp({ adminOnly = false }: { adminOnly?: boolean }) {
   const account = useAccount();
   const client = getBlogClient();
-  const problem = getBackendProblem();
-  const [session, setSession] = useState<Session | null>(null), [ready, setReady] = useState(false), [state, setState] = useState<'checking' | 'authorized' | 'denied' | 'error'>('checking'), [user, setUser] = useState<User | null>(null), [error, setError] = useState(''), [recovery, setRecovery] = useState(false), [retry, setRetry] = useState(0);
+  const [access, setAccess] = useState<{id:string; adminOnly:boolean; allowed:boolean} | null>(null);
+  const [error, setError] = useState('');
   useEffect(() => {
-    if (!client) return;
     let live = true;
-    if (new URLSearchParams(window.location.search).get('mode') === 'recovery') setRecovery(true);
-    const subscription = client.auth.onAuthStateChange((event, nextSession) => {
+    setAccess(null); setError('');
+    if (!account.ready || !client) return;
+    if (adminOnly && !account.isAdmin) { navigateBlog('/blog/home/',true); return; }
+    if (!account.user) return;
+    void client.rpc(adminOnly ? 'is_blog_admin' : 'is_blog_member').then(({data,error}) => {
       if (!live) return;
-      if (event === 'PASSWORD_RECOVERY') setRecovery(true);
-      if (event === 'SIGNED_OUT') setRecovery(false);
-      setSession(nextSession); setReady(true);
+      if (error) setError('Unable to verify access. / 暂时无法验证权限。');
+      else if (data !== true && adminOnly) navigateBlog('/blog/home/',true);
+      else setAccess({id:account.user!.id, adminOnly, allowed:data===true});
     });
-    void client.auth.getSession().then(({ data, error: sessionError }) => { if (!live) return; if (sessionError) { setError(reportError(sessionError)); setState('error'); } setSession(data.session); setReady(true); }).catch((cause) => { if (live) { setError(reportError(cause)); setState('error'); setReady(true); } });
-    return () => { live = false; subscription.data.subscription.unsubscribe(); };
-  }, [client]);
-  useEffect(() => {
-    if (!client || !ready || !session) { if (ready && !session) setUser(null); return; }
-    let live = true;
-    setState((current) => current === 'authorized' && session.user.id === user?.id ? current : 'checking'); setError('');
-    void (async () => {
-      try {
-        const { data: authData, error: authError } = await client.auth.getUser(); if (authError) throw authError;
-        if (!authData.user) throw new Error('登录会话已失效，请重新登录。');
-        const { data: isAdmin, error: adminError } = await client.rpc('is_blog_member'); if (adminError) {
-          if (adminError.code === 'PGRST202' || /Could not find the function/i.test(adminError.message)) throw new Error('管理员验证函数尚未配置，请先在 Supabase 执行仓库中的数据库初始化 SQL。');
-          throw adminError;
-        }
-        if (live) { setUser(authData.user); setState(isAdmin === true ? 'authorized' : 'denied'); }
-      } catch (cause) { if (live) { setError(reportError(cause)); setState('error'); } }
-    })();
-    return () => { live = false; };
-  }, [client, ready, session?.access_token, retry]);
-  if (!client || problem) return <div className="blog-admin admin-gate" data-admin-state="unconfigured"><section className="blog-card admin-setup"><ShieldCheck size={30} /><span className="blog-eyebrow">ONE SMALL STEP / CONNECT SUPABASE</span><h1>工作台，等待连接<span>.</span></h1><p>后台页面已准备好。连接你的 Supabase 项目后，就能登录、管理草稿、发布文章和上传图片。</p>{problem && <Notice message={problem} kind="info" />}<ol><li>创建 Supabase 项目并执行仓库中的数据库初始化 SQL。</li><li>在 Supabase 创建自己的管理员账号，将其用户 ID 加入管理员表。</li><li>配置 Project URL 和 Publishable key，重新构建并部署网站。</li></ol><p className="admin-setup-note">这里需要公开的项目配置。管理员密码和数据库 secret key 不放进网站源码。</p><a className="blog-button blog-outline-button" href="/blog/home/">回到博客<ArrowLeft size={15} /></a></section></div>;
-  if (!ready) return <div className="blog-admin admin-gate" data-admin-state="checking"><div className="blog-card admin-auth"><Spinner>正在恢复登录会话…</Spinner></div></div>;
-  if (!session) return <SignIn client={client} initialError={error} />;
-  if (state === 'checking') return <div className="blog-admin admin-gate" data-admin-state="checking"><div className="blog-card admin-auth"><Spinner>正在验证邮箱与创作权限…</Spinner></div></div>;
-  if (state !== 'authorized' || !user) return <div className="blog-admin admin-gate" data-admin-state={state}><section className="blog-card admin-auth"><ShieldCheck size={29} /><h1>{state === 'denied' ? '请先验证你的邮箱。' : '暂时无法验证权限。'}</h1><p>{state === 'denied' ? '完成邮箱验证后，重新登录即可发布自己的文章和照片。' : '请检查项目配置和数据库初始化；验证成功后才能进入工作台。'}</p>{error && <Notice message={error} />}<div className="admin-dialog-actions">{state === 'error' && <button className="blog-button" onClick={() => setRetry((value) => value + 1)}>重新验证</button>}<button className="blog-button blog-outline-button" onClick={() => void client.auth.signOut().then(({ error: signOutError }) => { if (signOutError) setError(reportError(signOutError)); })}><LogOut size={15} />退出登录</button></div></section></div>;
-  if (!account.ready || !account.profile) return <div className="blog-card admin-auth"><p>{account.error || '正在准备作者资料…'}</p>{account.error && <button className="blog-button" onClick={account.reload}>重试</button>}</div>;
-  return <Dashboard client={client} user={user} recovery={recovery} clearRecovery={() => { setRecovery(false); const currentUrl = new URL(window.location.href); currentUrl.searchParams.delete('mode'); window.history.replaceState(null, '', currentUrl.href); }} />;
+    return () => { live=false; };
+  }, [account.ready, account.user?.id, account.isAdmin, adminOnly, client]);
+  if (!account.ready || (adminOnly && !account.isAdmin)) return null;
+  if (!client) return <Notice message={getBackendProblem() || 'Account service unavailable.'} />;
+  if (!account.user) return <SignIn client={client} />;
+  if (error) return <Notice message={error} />;
+  if (!access || access.id !== account.user.id || access.adminOnly !== adminOnly) return <Spinner>Checking access / 正在验证权限…</Spinner>;
+  if (!access.allowed) return <Notice message="Please verify your email before writing. / 请先验证邮箱后再创作。" />;
+  if (!account.profile) return <Notice message={account.error || 'Preparing your profile / 正在准备作者资料…'} kind="info" />;
+  return <Dashboard client={client} user={account.user} recovery={false} clearRecovery={() => {}} />;
 }
-
-
-
