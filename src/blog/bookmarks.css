@@ -1,0 +1,22 @@
+.blog-bookmark-nav{position:relative;display:flex;align-items:center;gap:2px;font-size:15px;font-weight:500;white-space:nowrap}
+.blog-bookmark-nav>a{position:relative;padding:17px 2px}
+.blog-bookmark-nav>a:hover,.blog-bookmark-nav>a[aria-current]{color:var(--blog-accent-text)}
+.blog-bookmark-nav>a[aria-current]::after{content:'';position:absolute;left:50%;bottom:6px;width:19px;height:3px;border-radius:3px;transform:translateX(-50%);background:var(--blog-accent)}
+.blog-root .blog-bookmark-toggle{display:grid;place-items:center;width:24px;height:32px;color:var(--blog-muted);border-radius:6px}
+.blog-bookmark-toggle svg{transition:transform .18s}
+.blog-bookmark-toggle[aria-expanded=true] svg{transform:rotate(180deg)}
+.blog-root .blog-bookmark-toggle:hover{background:var(--blog-soft);color:var(--blog-ink)}
+.blog-bookmark-dropdown{position:absolute;top:calc(100% + 4px);left:50%;transform:translateX(-50%);width:235px;max-height:360px;overflow:auto;z-index:95;padding:8px;background:var(--blog-card);border:1px solid var(--blog-line);border-radius:14px;box-shadow:0 16px 45px #0004}
+.blog-bookmark-dropdown>a{display:grid;grid-template-columns:18px minmax(0,1fr) auto;align-items:center;gap:12px;padding:12px 10px;font-size:13px;border-radius:8px;white-space:normal}
+.blog-bookmark-dropdown>a:hover,.blog-bookmark-dropdown>a[aria-current]{background:var(--blog-soft);color:var(--blog-accent-text)}
+.blog-bookmark-dropdown small{font-size:11px;color:var(--blog-muted)}
+.blog-collection-actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:space-between;margin:0 0 25px}
+.blog-bookmark-filters{display:flex;gap:8px;flex-wrap:wrap}
+.blog-bookmark-filters>a{padding:8px 15px;border:1px solid var(--blog-line);border-radius:20px;font-size:12px}
+.blog-bookmark-filters>a:hover,.blog-bookmark-filters>a[aria-current]{background:var(--blog-accent);color:var(--blog-accent-ink);border-color:var(--blog-accent)}
+.blog-bookmark-item{display:grid;min-width:0}
+.blog-bookmark-item>.blog-resource{height:100%}
+.blog-bookmark-edit{display:flex;justify-content:flex-end;align-items:center;gap:6px;font-size:12px;color:var(--blog-muted)!important;padding:10px 4px}
+.admin-bookmark-category{display:grid;gap:10px}.admin-bookmark-category>div{display:flex;gap:12px;align-items:center}
+@media(max-width:600px){.blog-bookmark-nav{font-size:13px}.blog-bookmark-dropdown{left:auto;right:0;transform:none;width:220px}.blog-bookmark-nav>a{padding:12px 2px}}
+@media(prefers-reduced-motion:reduce){.blog-bookmark-toggle svg{transition:none}}

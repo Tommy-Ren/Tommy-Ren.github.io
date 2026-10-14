@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import BlogApp from './BlogApp';
-import { getBackendProblem, loadPublishedContent, usesDatabase } from './backend';
+import { getBackendProblem, loadPublishedBookmarks, loadPublishedContent, usesDatabase } from './backend';
 import { resolveBlogPage, requestedArticleSlug } from './routes';
 import type { BlogPageData } from './types';
 import { useLocale } from '../i18n/Locale';
@@ -11,6 +11,10 @@ export default function BlogRuntime({ initialData }: { initialData: BlogPageData
   const [attempt, setAttempt] = useState(0);
   const [address, setAddress] = useState(() => window.location.pathname + window.location.search);
   const retry = useCallback(() => setAttempt(value => value + 1), []);
+  useEffect(() => {
+    window.addEventListener('blog:bookmarks-updated', retry);
+    return () => window.removeEventListener('blog:bookmarks-updated', retry);
+  }, [retry]);
   useEffect(() => {
     const update = () => setAddress(window.location.pathname + window.location.search);
     const navigate = (event: MouseEvent) => {
@@ -44,7 +48,10 @@ export default function BlogRuntime({ initialData }: { initialData: BlogPageData
     const workspace = resolveBlogPage(pathname, {posts:[]}, search);
     if (['admin','studio','account'].includes(workspace.route.page)) {
       setData(previous => ({route:workspace.route,content:previous.content}));
-      return;
+      if (usesDatabase()) void loadPublishedBookmarks().then(links => {
+        if (active) setData(previous => ({ ...previous, content: { ...previous.content, links } }));
+      }).catch(() => {});
+      return () => { active = false; };
     }
     if (!usesDatabase()) {
       // Direct links stay pre-rendered; internal navigation fetches their content

@@ -4,6 +4,7 @@ import { Check, CheckCircle2, ChevronDown, Eye, EyeOff, LogOut, PenLine, Setting
 import { getBlogClient } from './backend';
 import { useLocale } from '../i18n/Locale';
 import type { BlogPost } from './types';
+import PasswordForm from './PasswordForm';
 import './community.css';
 
 export interface Author { id: string; display_name: string; avatar: string }
@@ -69,7 +70,7 @@ export function AccountMenu() {
   }, []);
   if (!ready) return <span className="community-account-loading" aria-label={zh ? '正在恢复账号' : 'Loading account'} />;
   if (!user) return <button className="blog-portfolio-link" onClick={openAuth}>{zh ? '登录 / 注册' : 'Log in / Sign up'}</button>;
-  return <div className="community-account" ref={root} onKeyDown={e => { if (e.key === 'Escape') { setOpen(false); root.current?.querySelector('button')?.focus(); } }}><button className="community-account-trigger" aria-label={zh ? '我的账号' : 'My account'} aria-expanded={open} onClick={() => setOpen(!open)}><Avatar author={profile} /><ChevronDown size={14} /></button>{open && <div className="community-account-popover"><strong>{profile?.display_name || (zh ? '我的账号' : 'My account')}</strong><small>{isAdmin ? (zh ? '管理员' : 'Administrator') : (zh ? '作者' : 'Writer')}</small>{error ? <button onClick={reload}>{zh ? '重试账号连接' : 'Retry account connection'}</button> : user.email_confirmed_at && profile && <a href="/blog/studio/"><PenLine size={16} />{zh ? '创作工作台' : 'Writing studio'}</a>}<button onClick={() => { setOpen(false); openAuth(); }}><Settings size={16} />{zh ? '个人资料' : 'Edit profile'}</button><a href="/blog/account/">{zh ? '修改密码' : 'Change password'}</a><button onClick={async () => { const result = await getBlogClient()?.auth.signOut(); if (result?.error) setNotice(result.error.message); else setOpen(false); }}><LogOut size={16} />{zh ? '退出登录' : 'Sign out'}</button>{notice && <p role="alert">{notice}</p>}</div>}</div>;
+  return <div className="community-account" ref={root} onKeyDown={e => { if (e.key === 'Escape') { setOpen(false); root.current?.querySelector('button')?.focus(); } }}><button className="community-account-trigger" aria-label={zh ? '我的账号' : 'My account'} aria-expanded={open} onClick={() => setOpen(!open)}><Avatar author={profile} /><ChevronDown size={14} /></button>{open && <div className="community-account-popover"><strong>{profile?.display_name || (zh ? '我的账号' : 'My account')}</strong><small>{isAdmin ? (zh ? '管理员' : 'Administrator') : (zh ? '作者' : 'Writer')}</small>{error ? <button onClick={reload}>{zh ? '重试账号连接' : 'Retry account connection'}</button> : user.email_confirmed_at && profile && <a href="/blog/studio/" onClick={() => setOpen(false)}><PenLine size={16} />{zh ? '创作工作台' : 'Writing studio'}</a>}<button onClick={() => { setOpen(false); openAuth(); }}><Settings size={16} />{zh ? '个人资料' : 'Edit profile'}</button><button onClick={async () => { const result = await getBlogClient()?.auth.signOut(); if (result?.error) setNotice(result.error.message); else setOpen(false); }}><LogOut size={16} />{zh ? '退出登录' : 'Sign out'}</button>{notice && <p role="alert">{notice}</p>}</div>}</div>;
 }
 
 function AccountDialog({ close }: { close: () => void }) {
@@ -86,7 +87,7 @@ function AccountDialog({ close }: { close: () => void }) {
     const key = (event: KeyboardEvent) => {
       if (event.key === 'Escape') close();
       if (event.key !== 'Tab') return;
-      const elements = Array.from(box.current?.querySelectorAll<HTMLElement>('button:not(:disabled),input:not(:disabled),a[href]') || []);
+      const elements = Array.from(box.current?.querySelectorAll<HTMLElement>('button:not(:disabled),input:not(:disabled),a[href],summary') || []);
       const first = elements[0], last = elements.at(-1);
       if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
       else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
@@ -195,6 +196,7 @@ function AccountDialog({ close }: { close: () => void }) {
         {feedback}
         <button type="submit" className="blog-button" disabled={busy}>{busy ? (zh ? '处理中…' : 'Please wait…') : user ? (zh ? '保存资料' : 'Save profile') : mode === 'signup' ? (zh ? '创建账号' : 'Create account') : mode === 'reset' ? (zh ? '发送重置链接' : 'Send reset link') : (zh ? '登录' : 'Log in')}</button>
       </form>
+      {user && <details className="community-profile-security"><summary>{zh ? '账号安全 · 修改密码' : 'Account security · Change password'}</summary><PasswordForm /></details>}
       {!user && <div className="community-auth-links"><button disabled={busy} onClick={() => changeMode(mode === 'signup' ? 'login' : 'signup')}>{mode === 'signup' ? (zh ? '已有账号？登录' : 'Already a member? Log in') : (zh ? '新用户？注册' : 'New here? Sign up')}</button><button disabled={busy} onClick={() => changeMode(mode === 'reset' ? 'login' : 'reset')}>{mode === 'reset' ? (zh ? '返回登录' : 'Back to login') : (zh ? '忘记密码？' : 'Forgot password?')}</button>{mode === 'signup' && <button disabled={busy || !email} onClick={resend}>{zh ? '重新发送验证邮件' : 'Resend confirmation'}</button>}</div>}
     </>}
   </div></div>;

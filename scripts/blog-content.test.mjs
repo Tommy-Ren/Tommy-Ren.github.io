@@ -110,8 +110,8 @@ test('Static build emits real route HTML, canonical links, a real 404, RSS, and 
     const rendererPath = path.join(directory, 'render.mjs');
     await writeFile(rendererPath, 'export function renderBlog(data) { return `<main><h1>${data.route.page}</h1>${data.content.posts.find(post => post.slug === data.route.slug)?.html ?? ""}</main>`; }');
     const result = await buildBlog({ contentDir, outputDir, rendererPath, database: false });
-    assert.deepEqual(result, { pages: 8, posts: 1 });
-    for (const page of ['home', 'articles', 'photos', 'collections', 'about', 'admin', '404', 'articles/example']) {
+    assert.deepEqual(result, { pages: 10, posts: 1 });
+    for (const page of ['home', 'articles', 'photos', 'collections', 'about', 'admin', 'studio', 'account', '404', 'articles/example']) {
       const html = await readFile(path.join(outputDir, 'blog', page, 'index.html'), 'utf8');
       assert.match(html, /<main>/);
       assert.match(html, new RegExp(`rel="canonical" href="https://tommy-ren.github.io/blog/${page}/"`));
@@ -120,9 +120,11 @@ test('Static build emits real route HTML, canonical links, a real 404, RSS, and 
     const post = await readFile(path.join(outputDir, 'blog', 'articles', 'example', 'index.html'), 'utf8');
     assert.match(post, /<h2 id="hello">Hello<\/h2>/);
     assert.match(await readFile(path.join(outputDir, '404.html'), 'utf8'), /name="robots" content="noindex"/);
-    const admin = await readFile(path.join(outputDir, 'blog', 'admin', 'index.html'), 'utf8');
-    assert.match(admin, /name="robots" content="noindex"/);
-    assert.doesNotMatch(admin, /Body text|A clear summary/);
+    for (const page of ['admin', 'studio', 'account']) {
+      const workspace = await readFile(path.join(outputDir, 'blog', page, 'index.html'), 'utf8');
+      assert.match(workspace, /name="robots" content="noindex"/);
+      assert.doesNotMatch(workspace, /Body text|A clear summary/);
+    }
     assert.match(await readFile(path.join(outputDir, 'blog', 'index.html'), 'utf8'), /href="\/blog\/home\/"/);
     const rss = await readFile(path.join(outputDir, 'blog', 'feed.xml'), 'utf8');
     assert.match(rss, /<guid isPermaLink="true">https:\/\/tommy-ren.github.io\/blog\/articles\/example\/<\/guid>/);

@@ -111,6 +111,10 @@ async function publicRows<T>(table: string, columns: string, order: string): Pro
   }
 }
 
+export function loadPublishedBookmarks() {
+  return publicRows<BlogLinkRecord>('blog_links', 'id,title,kind,description,href,symbol,color,sort_order', 'sort_order');
+}
+
 export async function loadPublishedContent(slug?: string, locale: 'en' | 'zh' = 'en'): Promise<BlogContent> {
   const database = getBlogClient();
   if (!database) throw new Error(getBackendProblem() || '数据库没有连接。');
@@ -118,7 +122,7 @@ export async function loadPublishedContent(slug?: string, locale: 'en' | 'zh' = 
   const [records, photos, links, settingsResult] = await Promise.all([
     publicRows<Omit<BlogPostRecord, 'markdown'>>( 'blog_posts', metadataColumns, 'published_on'),
     publicRows<BlogPhotoRecord>('blog_photos', 'id,title,caption,image_url,source_url,credit,is_own,sort_order,source_language,content_version', 'sort_order'),
-    publicRows<BlogLinkRecord>('blog_links', 'id,title,kind,description,href,symbol,color,sort_order', 'sort_order'),
+    loadPublishedBookmarks(),
     database.from('blog_settings').select('*').eq('id', 'main').single(),
   ]);
   if (settingsResult.error) throw settingsResult.error;

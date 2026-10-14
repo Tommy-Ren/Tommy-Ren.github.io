@@ -1,3 +1,5 @@
+import BookmarksNav from './BookmarksNav';
+import { bookmarkCategory, bookmarkCategoryLabel, bookmarkCategories, bookmarkUrl } from './bookmarks';
 import { navigateBlog } from './navigation';
 import PasswordSettings from './PasswordSettings';
 import { AccountProvider, AccountMenu, AccountDialogHost, useAccount, PostIdentity, Comments } from './Community';
@@ -6,7 +8,7 @@ import { useEffect, useRef, useState, type ReactNode, type ComponentType } from 
 import {
   ArrowLeft, ArrowRight, ArrowUp, ArrowUpRight, BookOpen,
   ChevronLeft, ChevronRight, Code2, Github, Globe2, Mail, MapPin,
-  Moon, Search, Sparkles, Sun, X,
+  Moon, Search, Sparkles, Sun, X, PenLine, Plus,
 } from 'lucide-react';
 import { profile } from '../data/portfolio';
 import type { BlogPageData, BlogPost, BlogPhoto, BlogLink, BlogSettings } from './types';
@@ -106,7 +108,7 @@ function Home({ posts, photos, resources, settings }: { posts: BlogPost[]; photo
     </div>
     <div className="blog-bento-row blog-bottom-row">
       <StatisticsCard />
-      <section className="blog-card blog-home-collection"><div className="blog-card-top"><h2>{t("最近收集")}</h2><ArrowLink href="/blog/collections/">{t("全部")}</ArrowLink></div><div className="blog-resource-previews">{resources.slice(0, 2).map((resource) => <a className={`blog-resource-cover ${resource.color}`} href={resource.href} target="_blank" rel="noopener noreferrer" key={resource.id}><span>{resource.kind.split(' / ')[0]}</span><strong>{t(resource.title)}</strong><ArrowUpRight size={16} aria-hidden="true" /></a>)}</div><strong className="blog-collection-caption">{t("一些值得留下的灵感。")}</strong><p className="blog-card-footnote"><i />{t("文档 ")}<span>·</span>{t("工具 ")}<span>·</span>{t("学习")}</p></section>
+      <section className="blog-card blog-home-collection"><div className="blog-card-top"><h2>{t("最近收集")}</h2><ArrowLink href="/blog/collections/">{t("全部")}</ArrowLink></div><div className="blog-resource-previews">{resources.slice(0, 2).map((resource) => <a className={`blog-resource-cover ${resource.color}`} href={resource.href} target="_blank" rel="noopener noreferrer" key={resource.id}><span>{bookmarkCategoryLabel(bookmarkCategory(resource.kind), locale)}</span><strong>{t(resource.title)}</strong><ArrowUpRight size={16} aria-hidden="true" /></a>)}</div><strong className="blog-collection-caption">{t("一些值得留下的灵感。")}</strong><p className="blog-card-footnote"><i />{t("文档 ")}<span>·</span>{t("工具 ")}<span>·</span>{t("学习")}</p></section>
       <MusicPlayer />
     </div>
   </div>;
@@ -180,7 +182,23 @@ function Photos({ photos, local }: { photos: BlogPhoto[]; local: boolean }) {
 }
 function Collections({ resources }: { resources: BlogLink[] }) {
   const { t, locale } = useLocale();
-  return <><PageHeading eyebrow={t("LINKS / TOOLS / INSPIRATION")} title={t("一些值得留下的")} description={t("给好奇心准备一个书签。喜欢的工具、文档，以及想继续探索的方向。")} /><div className="blog-collection-grid">{resources.map((resource, index) => <a className="blog-card blog-resource" href={resource.href} target="_blank" rel="noopener noreferrer" key={resource.id}><div className={`blog-resource-art ${resource.color}`}><span className="blog-eyebrow">{resource.kind}</span><strong>{resource.symbol}</strong><span className="blog-resource-art-bottom">{t("KEEP EXPLORING ")}<ArrowUpRight size={22} /></span></div><div className="blog-resource-copy"><span className="blog-eyebrow">0{index + 1} {t("/ BOOKMARK")}</span><h2>{t(resource.title)}<ArrowUpRight size={19} /></h2><p>{t(resource.description)}</p><span className="blog-resource-domain">{new URL(resource.href).hostname}</span></div></a>)}</div><div className="blog-card blog-collection-note"><Sparkles size={21} /><div><h2>{t("还在慢慢收集。")}</h2><p>{t("遇到一个好工具，读懂一个新概念，都值得留下来。")}</p></div></div></>;
+  const { isAdmin } = useAccount();
+  const category = typeof window === 'undefined' ? '' : new URLSearchParams(window.location.search).get('category') || '';
+  const categories = bookmarkCategories(resources);
+  const filtered = category ? resources.filter(item => bookmarkCategory(item.kind) === category) : resources;
+  return <>
+    <PageHeading eyebrow={t('LINKS / TOOLS / INSPIRATION')} title={category ? bookmarkCategoryLabel(category, locale) : t('一些值得留下的')} description={t('给好奇心准备一个书签。喜欢的工具、文档，以及想继续探索的方向。')} />
+    <div className="blog-collection-actions"><nav className="blog-bookmark-filters" aria-label={locale === 'en' ? 'Filter bookmarks' : '筛选收集'}>
+      <a href={bookmarkUrl()} aria-current={!category ? 'page' : undefined}>{locale === 'en' ? 'All bookmarks' : '全部收集'}</a>
+      {categories.map(item => <a key={item} href={bookmarkUrl(item)} aria-current={category === item ? 'page' : undefined}>{bookmarkCategoryLabel(item, locale)}</a>)}
+    </nav>{isAdmin && <a className="blog-button" href="/blog/studio/?tab=links"><Plus size={15} />{locale === 'en' ? 'Manage bookmarks' : '管理收集'}</a>}</div>
+    <div className="blog-collection-grid">{filtered.map((resource, index) => <div className="blog-bookmark-item" key={resource.id}>
+      <a className="blog-card blog-resource" href={resource.href} target="_blank" rel="noopener noreferrer"><div className={`blog-resource-art ${resource.color}`}><span className="blog-eyebrow">{bookmarkCategoryLabel(bookmarkCategory(resource.kind), locale)}</span><strong>{resource.symbol}</strong><span className="blog-resource-art-bottom">{t('KEEP EXPLORING ')}<ArrowUpRight size={22} /></span></div><div className="blog-resource-copy"><span className="blog-eyebrow">{String(index + 1).padStart(2, '0')} {t('/ BOOKMARK')}</span><h2>{t(resource.title)}<ArrowUpRight size={19} /></h2><p>{t(resource.description)}</p><span className="blog-resource-domain">{new URL(resource.href).hostname}</span></div></a>
+      {isAdmin && <a className="blog-bookmark-edit" href={'/blog/studio/?tab=links&edit=' + encodeURIComponent(resource.id)}><PenLine size={13} />{locale === 'en' ? 'Edit bookmark' : '编辑收集'}</a>}
+    </div>)}</div>
+    {!filtered.length && <div className="blog-card blog-empty"><Sparkles size={25} /><h2>{locale === 'en' ? 'Something worth keeping, soon.' : '值得留下的，慢慢收集。'}</h2><p>{locale === 'en' ? 'No bookmarks in this category yet.' : '这个分类还没有收集。'}</p></div>}
+    <div className="blog-card blog-collection-note"><Sparkles size={21} /><div><h2>{t('还在慢慢收集。')}</h2><p>{t('遇到一个好工具，读懂一个新概念，都值得留下来。')}</p></div></div>
+  </>;
 }
 function About({ settings }: { settings: BlogSettings }) {
   const { t, locale } = useLocale();
@@ -239,7 +257,7 @@ function BlogShell({ data, onRetry }: { data: BlogPageData; onRetry?: () => void
     <NeonPointer />
     <FloatingPlayer page={page} />
     <a className="blog-skip-link" href="#blog-main">{t("跳到页面内容")}</a>
-    <div className="blog-shell"><header className="blog-header"><a className="blog-brand" href="/blog/home/" aria-label={t("Tommy 博客首页")}>{t("tommy")}<span>.</span><small>{t("THE BLOG")}</small></a><nav aria-label={t("博客导航")}>{navigation.map(([key, label]) => <a href={`/blog/${key}/`} key={key} aria-current={page === key || key === 'articles' && page === 'post' ? 'page' : undefined}>{t(label)}</a>)}</nav><div className="blog-header-actions"><LanguageSwitch /><span className="blog-location"><i />{t("VANCOUVER, CA")}</span><button className="blog-theme-toggle" aria-label={t(theme === 'midnight' ? '切换到清新浅色主题' : '切换到午夜紫色主题')} onClick={toggleTheme}>{theme === 'midnight' ? <Sun size={17} /> : <Moon size={17} />}</button><AccountMenu /></div></header>
+    <div className="blog-shell"><header className="blog-header"><a className="blog-brand" href="/blog/home/" aria-label={t("Tommy 博客首页")}>{t("tommy")}<span>.</span><small>{t("THE BLOG")}</small></a><nav aria-label={t("博客导航")}>{navigation.map(([key, label]) => key === 'collections' ? <BookmarksNav key={key} resources={resources} active={page === 'collections'} /> : <a href={`/blog/${key}/`} key={key} aria-current={page === key || key === 'articles' && page === 'post' ? 'page' : undefined}>{t(label)}</a>)}</nav><div className="blog-header-actions"><LanguageSwitch /><span className="blog-location"><i />{t("VANCOUVER, CA")}</span><button className="blog-theme-toggle" aria-label={t(theme === 'midnight' ? '切换到清新浅色主题' : '切换到午夜紫色主题')} onClick={toggleTheme}>{theme === 'midnight' ? <Sun size={17} /> : <Moon size={17} />}</button><AccountMenu /></div></header>
       <main id="blog-main" tabIndex={-1} className={`blog-main blog-page-${page}`}>{!workspace && data.live?.status === 'loading' ? <div className="blog-card blog-empty blog-live-status" role="status"><Sparkles size={28} /><h1>{t("正在打开博客。")}</h1><p>{t("稍等片刻，文字即将到来。")}</p></div> : !workspace && data.live?.status === 'error' ? <div className="blog-card blog-empty blog-live-status" role="alert"><h1>{t("稍后再读。")}</h1><p>{t(data.live.message || '博客内容暂时没有加载成功，请稍后再试。')}</p><button className="blog-button" onClick={onRetry}>{t("重新加载")}<ArrowRight size={16} /></button></div> : page === 'admin' ? <AdminLoader adminOnly /> : page === 'studio' ? <AdminLoader /> : page === 'account' ? <PasswordSettings /> : page === 'home' ? <Home posts={data.content.posts} photos={photos} resources={resources} settings={settings} /> : page === 'articles' ? <Articles posts={data.content.posts} /> : page === 'post' && post ? <Post post={post} posts={data.content.posts} settings={settings} /> : page === 'photos' ? <Photos photos={photos} local={data.content.source !== 'supabase'} /> : page === 'collections' ? <Collections resources={resources} /> : page === 'about' ? <About settings={settings} /> : <NotFound />}</main>
       <footer className="blog-footer"><span>© {settings.display_name} <span className="blog-footer-divider">/</span> {t("好奇心，慢慢生长。")}</span><div><a href="/blog/credits.html">{t("素材说明")}</a>{isAdmin && <a href="/blog/admin/">Admin</a>}{feedUrl && <a href={feedUrl} aria-label={t("订阅博客 RSS")}>{t("RSS")}</a>}<a href="https://github.com/snowhejia/momo-blog" target="_blank" rel="noopener noreferrer">{t("Inspired by momo-blog")}<ArrowUpRight size={12} /></a><span className="blog-footer-star" aria-hidden="true">✳</span></div></footer>
     </div>
