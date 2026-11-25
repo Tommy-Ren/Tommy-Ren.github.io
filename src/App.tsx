@@ -1,5 +1,5 @@
 import { useLocale, LanguageSwitch } from './i18n/Locale';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import { AnimatePresence, motion, useReducedMotion, useScroll, useTransform, type MotionValue } from 'framer-motion';
 import { ArrowDown, ArrowUpRight, Github, Linkedin, Mail, MapPin, Sparkles } from 'lucide-react';
 import { AnimatedText, FadeIn } from './components/Motion';
@@ -11,7 +11,8 @@ import MyPath from './components/MyPath';
 import MagneticPointer from './components/MagneticPointer';
 import RippleField from './components/RippleField';
 import PortfolioNavigation, { NavigationDock } from './components/PortfolioNavigation';
-import { experience, expertise, profile, projects, type Project } from './data/portfolio';
+import { experience, expertise, featuredProjects, otherProjects, profile, type Project } from './data/portfolio';
+import './components/ProjectShowcase.css';
 
 const art = (name: string) => `/images/reference/${name}.png`;
 
@@ -101,28 +102,53 @@ function ExpertiseSection() {
   </section>;
 }
 
-function ProjectCard({ project, index, total, progress }: { project: Project; index: number; total: number; progress: MotionValue<number> }) {
+function ProjectCard({ project, Heading = 'h3' }: { project: Project; Heading?: 'h3' | 'h4' }) {
   const { t } = useLocale();
-  const ref = useRef<HTMLDivElement>(null);
-  const reduced = useReducedMotion();
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'start start'] });
-  const imageScale = useTransform(scrollYProgress, [0, 1], [1.02, 1]);
-  const scale = useTransform(progress, [index / total, 1], [1, 1 - (total - 1 - index) * 0.03]);
-  const destination = project.liveUrl || project.repository;
-  return <div ref={ref} className="project-container" style={{ top: 96 + index * 28 }}>
-    <motion.article className="project-card" style={{ scale: reduced ? 1 : scale }} aria-labelledby={`project-${project.id}`}>
-      <div className="project-top"><span className="project-number">{project.number}</span><div className="project-name"><span className="eyebrow">{t(project.category)} / {project.year}</span><h3 id={`project-${project.id}`}>{project.name}</h3></div><a className="ghost-button" href={destination} target="_blank" rel="noopener noreferrer">{t(project.liveUrl ? 'Live project' : 'Source code')}<ArrowUpRight size={19} aria-hidden="true" /></a></div>
-      <div className="project-gallery"><div className="project-details"><div className="project-image detail-image"><img src={project.detailImages[0]} alt={`${project.name} — feature illustration`} loading="lazy" /></div><div className="project-image secondary-image"><img src={project.detailImages[1]} alt={`${project.name} — interface study`} loading="lazy" /></div></div><div className="project-image main-image"><motion.img src={project.image} alt={`${project.name} — original project illustration`} loading="lazy" style={{ scale: reduced ? 1 : imageScale }} /></div></div>
-      <div className="project-caption"><p>{t(project.description)}</p><div className="project-tech">{project.stack.map(tech => <span key={tech}>{tech}</span>)}<a href={project.repository} target="_blank" rel="noopener noreferrer" aria-label={`${project.name} source on GitHub`}><Github size={20} /></a></div></div>
-    </motion.article>
-  </div>;
+  return (
+    <article className="project-card" style={{ '--project-accent': project.accent } as CSSProperties} aria-labelledby={`project-${project.id}`}>
+      <header>
+        <div className="project-meta"><span>{t(project.category)}</span><span>{project.year}</span></div>
+        <Heading id={`project-${project.id}`}>{t(project.name)}</Heading>
+      </header>
+      {project.preview && (
+        <img className="project-preview" src={project.preview.src} alt={t(project.preview.alt)} loading="lazy" decoding="async" />
+      )}
+      <p className="project-description">{t(project.description)}</p>
+      {project.highlights && <ul className="project-highlights">
+        {project.highlights.map(highlight => <li key={highlight}>{t(highlight)}</li>)}
+      </ul>}
+      <footer className="project-footer">
+        <ul className="project-tech" aria-label={t('Technologies')}>
+          {project.stack.map(tech => <li key={tech}>{tech}</li>)}
+        </ul>
+        <div className="project-links">
+          {project.liveUrl && <a className="project-live" href={project.liveUrl} target="_blank" rel="noopener noreferrer">{t('Live project')} <ArrowUpRight size={15} aria-hidden="true" /></a>}
+          <a href={project.repository} target="_blank" rel="noopener noreferrer"><Github size={16} aria-hidden="true" /> {t('Source code')}</a>
+        </div>
+      </footer>
+    </article>
+  );
 }
 
 function ProjectsSection() {
   const { t } = useLocale();
-  const ref = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] });
-  return <section id="projects" className="projects-section" aria-labelledby="projects-title"><FadeIn className="projects-heading"><span className="eyebrow">{t("04 / From curiosity to code")}</span><h2 id="projects-title" className="hero-heading section-heading">{t("Projects")}</h2><p>{t("A few experiments that became something you can explore.")}</p></FadeIn><div ref={ref} className="project-stack">{projects.map((project, i) => <ProjectCard key={project.id} project={project} index={i} total={projects.length} progress={scrollYProgress} />)}</div></section>;
+  return (
+    <section id="projects" className="projects-section" aria-labelledby="projects-title">
+      <FadeIn className="projects-heading">
+        <h2 id="projects-title" className="hero-heading section-heading">{t('Projects')}</h2>
+        <p>{t('Selected work in application development, Python backends, and concurrent systems.')}</p>
+      </FadeIn>
+      <div className="project-grid">
+        {featuredProjects.map(project => <ProjectCard key={project.id} project={project} />)}
+      </div>
+      <section className="other-projects" aria-labelledby="other-projects-title">
+        <h3 id="other-projects-title">{t('More projects')}</h3>
+        <div className="project-grid">
+          {otherProjects.map(project => <ProjectCard key={project.id} project={project} Heading="h4" />)}
+        </div>
+      </section>
+    </section>
+  );
 }
 
 function ContactSection() {
